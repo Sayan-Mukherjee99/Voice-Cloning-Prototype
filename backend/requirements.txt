@@ -1,0 +1,48 @@
+# VaaniShield Backend Dependencies
+# Python 3.11+
+
+# Web Framework
+fastapi==0.115.5
+uvicorn[standard]==0.32.1
+websockets==13.1
+python-multipart==0.0.12
+
+# Data Validation
+pydantic==2.10.3
+pydantic-settings==2.7.0
+
+# Redis (async)
+redis[asyncio]==5.2.1
+
+# PostgreSQL (async + sync)
+asyncpg==0.30.0
+psycopg2-binary==2.9.10
+pgvector==0.3.6
+sqlalchemy[asyncio]==2.0.36
+
+# ML / Audio
+onnxruntime==1.20.1
+numpy==1.26.4
+scipy==1.14.1
+librosa==0.10.2
+soundfile==0.12.1
+
+# Praat Parselmouth (biomechanical prosody)
+praat-parselmouth==0.4.4
+
+# PyTorch CPU-only (for Silero VAD loading utility)
+torch==2.4.1
+torchaudio==2.4.1
+
+# HTTP Client (for internal calls)
+httpx==0.28.1
+
+# Utilities
+python-jose[cryptography]==3.3.0
+structlog==24.4.0
+python-dotenv==1.0.1
+
+# Testing
+pytest==8.3.4
+pytest-asyncio==0.24.0
+httpx==0.28.1

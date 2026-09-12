@@ -1,0 +1,87 @@
+services:
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: vaanishield-api
+    ports:
+      - "8000:8000"
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - POSTGRES_DSN=postgresql://vaanishield:vaanishield_secret@postgres:5432/vaanishield
+      - DEBUG=false
+      - CORS_ORIGINS=["http://localhost:3000","http://127.0.0.1:3000"]
+    volumes:
+      - ./models:/app/models:ro    # ONNX model files (read-only)
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - vaani-net
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: vaanishield-redis
+    command: >
+      redis-server
+      --maxmemory 512mb
+      --maxmemory-policy allkeys-lru
+      --save ""
+      --appendonly no
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - vaani-net
+
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: vaanishield-postgres
+    environment:
+      POSTGRES_DB: vaanishield
+      POSTGRES_USER: vaanishield
+      POSTGRES_PASSWORD: vaanishield_secret
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/database.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vaanishield -d vaanishield"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+    networks:
+      - vaani-net
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: vaanishield-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+      - NEXT_PUBLIC_WS_URL=ws://localhost:8000
+    depends_on:
+      - api
+    restart: unless-stopped
+    networks:
+      - vaani-net
+
+volumes:
+  postgres_data:
+
+networks:
+  vaani-net:
+    driver: bridge
