@@ -20,6 +20,7 @@ DPDP Act 2023 Compliance:
 from __future__ import annotations
 
 import asyncio
+import collections
 import hashlib
 import json
 import logging
@@ -564,13 +565,16 @@ class ProsodyAnalyser:
 
 class RedisBufferManager:
     """
-    Manages ephemeral sliding audio buffers in Redis.
+    Manages ephemeral sliding audio buffers in Redis with in-memory fallback.
     Uses LPUSH + LTRIM for circular list (ring buffer).
     DPDP Act 2023: 15-second TTL enforced on every write.
     """
 
-    def __init__(self, redis_client: aioredis.Redis) -> None:
+    def __init__(self, redis_client: aioredis.Redis | None = None) -> None:
         self.r = redis_client
+        self._in_memory: dict[str, collections.deque[bytes]] = {}
+        self._meta: dict[str, dict] = {}
+        self._lock = asyncio.Lock()
 
     def _audio_key(self, session_id: str) -> str:
         return f"vaani:audio:{session_id}"
@@ -580,33 +584,75 @@ class RedisBufferManager:
 
     async def push_frame(self, session_id: str, pcm_bytes: bytes) -> int:
         """Push a PCM frame to the ring buffer. Returns current buffer length."""
-        key = self._audio_key(session_id)
-        async with self.r.pipeline() as pipe:
-            pipe.lpush(key, pcm_bytes)
-            # Keep only the most recent `buffer_window_frames` frames (1500ms)
-            pipe.ltrim(key, 0, settings.buffer_window_frames - 1)
-            pipe.expire(key, settings.redis_audio_ttl_s)
-            results = await pipe.execute()
-        return int(results[0])
+        if self.r is not None:
+            try:
+                key = self._audio_key(session_id)
+                async with self.r.pipeline() as pipe:
+                    pipe.lpush(key, pcm_bytes)
+                    pipe.ltrim(key, 0, settings.buffer_window_frames - 1)
+                    pipe.expire(key, settings.redis_audio_ttl_s)
+                    results = await pipe.execute()
+                return int(results[0])
+            except Exception as exc:
+                log.warning("Redis push_frame failed, using in-memory buffer", error=str(exc))
+
+        async with self._lock:
+            if session_id not in self._in_memory:
+                self._in_memory[session_id] = collections.deque(maxlen=settings.buffer_window_frames)
+            self._in_memory[session_id].appendleft(pcm_bytes)
+            return len(self._in_memory[session_id])
 
     async def get_window(self, session_id: str) -> list[bytes]:
         """Retrieve all frames in the current sliding window."""
-        key = self._audio_key(session_id)
-        frames = await self.r.lrange(key, 0, settings.buffer_window_frames - 1)
-        return frames  # most recent first
+        if self.r is not None:
+            try:
+                key = self._audio_key(session_id)
+                frames = await self.r.lrange(key, 0, settings.buffer_window_frames - 1)
+                if frames:
+                    return frames
+            except Exception as exc:
+                log.warning("Redis get_window failed, using in-memory buffer", error=str(exc))
+
+        async with self._lock:
+            if session_id in self._in_memory:
+                return list(self._in_memory[session_id])
+            return []
 
     async def set_session_meta(self, session_id: str, data: dict) -> None:
-        key = self._meta_key(session_id)
-        await self.r.set(key, json.dumps(data), ex=3600)
+        if self.r is not None:
+            try:
+                key = self._meta_key(session_id)
+                await self.r.set(key, json.dumps(data), ex=3600)
+                return
+            except Exception as exc:
+                log.warning("Redis set_session_meta failed", error=str(exc))
+
+        async with self._lock:
+            self._meta[session_id] = data
 
     async def get_session_meta(self, session_id: str) -> dict | None:
-        key = self._meta_key(session_id)
-        raw = await self.r.get(key)
-        return json.loads(raw) if raw else None
+        if self.r is not None:
+            try:
+                key = self._meta_key(session_id)
+                raw = await self.r.get(key)
+                if raw:
+                    return json.loads(raw)
+            except Exception as exc:
+                log.warning("Redis get_session_meta failed", error=str(exc))
+
+        async with self._lock:
+            return self._meta.get(session_id)
 
     async def delete_session(self, session_id: str) -> None:
         """Purge all audio and metadata for a session (DPDP compliance)."""
-        await self.r.delete(self._audio_key(session_id), self._meta_key(session_id))
+        if self.r is not None:
+            try:
+                await self.r.delete(self._audio_key(session_id), self._meta_key(session_id))
+            except Exception:
+                pass
+        async with self._lock:
+            self._in_memory.pop(session_id, None)
+            self._meta.pop(session_id, None)
         log.info("Session audio purged", session_id=session_id)
 
 
@@ -837,17 +883,19 @@ async def lifespan(app: FastAPI):
     # Startup
     log.info("VaaniShield starting up…")
     try:
-        app_state.redis = aioredis.from_url(
+        r = aioredis.from_url(
             settings.redis_url,
             encoding="utf-8",
             decode_responses=False,
         )
-        await app_state.redis.ping()
+        await r.ping()
+        app_state.redis = r
         log.info("Redis connected", url=settings.redis_url)
     except Exception as exc:
-        log.error("Redis connection failed", error=str(exc))
+        app_state.redis = None
+        log.warning("Redis connection failed (using in-memory fallback)", error=str(exc))
 
-    app_state.buffer = RedisBufferManager(app_state.redis) if app_state.redis else None
+    app_state.buffer = RedisBufferManager(app_state.redis)
     await app_state.db.connect()
     app_state.engine.load_models()
     log.info("VaaniShield ready")

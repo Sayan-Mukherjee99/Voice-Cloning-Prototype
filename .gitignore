@@ -1,0 +1,145 @@
+# ==============================================================================
+# Environment & Sensitive Files
+# ==============================================================================
+.env
+.env.*
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+!.env.example
+*.pem
+*.key
+*.cert
+*.crt
+*.p12
+*.pfx
+secrets.*
+credentials.json
+
+# ==============================================================================
+# Node.js & Next.js
+# ==============================================================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+lerna-debug.log*
+
+.next/
+out/
+build/
+dist/
+.turbo/
+.vercel/
+
+# TypeScript build cache
+*.tsbuildinfo
+next-env.d.ts.bak
+
+# Yarn / PnP
+.pnp
+.pnp.js
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+
+# ==============================================================================
+# Python & Virtual Environments
+# ==============================================================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Environments
+.venv/
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Distribution / packaging
+develop-eggs/
+eggs/
+.eggs/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Testing & Linting cache
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+.tox/
+
+# ==============================================================================
+# Databases, Volumes & Runtime State
+# ==============================================================================
+postgres_data/
+redis_data/
+dump.rdb
+*.sqlite
+*.sqlite3
+*.db
+
+# ==============================================================================
+# Temporary Audio & Logs
+# ==============================================================================
+logs/
+*.log
+*.tmp
+*.temp
+tmp/
+temp/
+
+# Audio test recordings / dump files (preserve code, avoid raw session dumps)
+*.wav
+*.mp3
+*.flac
+*.ogg
+*.raw
+
+# Large pretrained ONNX / PyTorch models (uncomment if models should not be committed)
+# models/*.onnx
+# models/*.pt
+# models/*.bin
+# models/*.safetensors
+
+# ==============================================================================
+# Operating System & IDEs
+# ==============================================================================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+[Dd]esktop.ini
+
+# Editors
+.idea/
+*.swp
+*.swo
+*~
+*.sublime-workspace
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
