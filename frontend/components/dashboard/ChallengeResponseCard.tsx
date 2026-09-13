@@ -1,8 +1,3 @@
-/**
- * ChallengeResponseCard — Compact Phonetic Challenge-Response Console
- * Section 6: Stateful challenge card with real-time vocal stability tracking.
- */
-
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -12,11 +7,6 @@ import {
   Zap,
   Radio,
   Timer,
-  ShieldAlert,
-  Mic,
-  Activity,
-  CheckCircle2,
-  Sparkles,
 } from "lucide-react";
 
 export default function ChallengeResponseCard() {
@@ -61,104 +51,93 @@ export default function ChallengeResponseCard() {
 
   const phrase = pitchChallengeText || "Pital ke bartan mein papita peela peela";
   const borderColor =
-    threatLevel === "RED" ? "#EF4444" : threatLevel === "AMBER" ? "#F59E0B" : "rgba(255,255,255,0.08)";
-  const headerColor =
-    threatLevel === "RED" ? "#FCA5A5" : threatLevel === "AMBER" ? "#FDE68A" : "#38BDF8";
+    threatLevel === "RED" ? "#EF4444" : threatLevel === "AMBER" ? "#F59E0B" : "rgba(255,255,255,0.12)";
 
   return (
     <div
-      className="bg-[#0A0F26]/90 rounded-xl p-4 flex flex-col justify-between shadow-lg transition-all duration-300"
+      className="bg-neutral-950/70 border border-neutral-800/80 rounded-2xl backdrop-blur-md p-5 shadow-2xl flex flex-col justify-between space-y-4"
       style={{
-        border: `1px solid ${isChallengeActive ? `${borderColor}60` : "rgba(255,255,255,0.08)"}`,
+        borderColor: isChallengeActive ? `${borderColor}80` : undefined,
       }}
     >
       {/* Header */}
-      <div className="flex items-center justify-between mb-2.5">
-        <div className="flex items-center gap-2">
+      <div className="flex items-center justify-between pb-3 border-b border-neutral-800/80">
+        <div className="flex items-center gap-2.5">
           <div
-            className="w-7 h-7 rounded-lg flex items-center justify-center"
+            className="w-8 h-8 rounded-lg flex items-center justify-center"
             style={{
-              background: isChallengeActive ? `${borderColor}20` : "rgba(255,255,255,0.05)",
+              background: isChallengeActive ? `${borderColor}20` : "rgba(6, 182, 212, 0.1)",
               color: isChallengeActive ? borderColor : "#38BDF8",
             }}
           >
             {isChallengeActive ? (
               <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ repeat: Infinity, duration: 1 }}>
-                <Zap size={14} />
+                <Zap size={16} />
               </motion.div>
             ) : (
-              <Radio size={14} />
+              <Radio size={16} />
             )}
           </div>
           <div>
-            <h3 className="text-xs font-bold text-white tracking-wide">
+            <h3 className="text-sm font-bold text-white tracking-wide">
               {isChallengeActive ? "⚡ PITCH Challenge Active" : "PITCH Challenge Console"}
             </h3>
-            <p className="text-[10px] font-mono text-white/40">Phonetic Interactive Challenge-Response</p>
+            <p className="text-[10px] font-mono text-neutral-400">Phonetic Interactive Challenge-Response</p>
           </div>
         </div>
 
         {isChallengeActive ? (
-          <div className="flex items-center gap-1.5 text-xs font-mono font-bold" style={{ color: borderColor }}>
+          <div className="flex items-center gap-1.5 text-xs font-mono font-bold px-2.5 py-1 rounded-full bg-neutral-900 border" style={{ color: borderColor, borderColor: `${borderColor}40` }}>
             <Timer size={12} />
-            <span>{elapsed}s</span>
+            <span>{elapsed}s ACTIVE</span>
           </div>
         ) : (
-          <span className="text-[9px] font-mono font-semibold px-2 py-0.5 rounded bg-white/5 text-white/40 border border-white/10 uppercase">
-            STANDBY
+          <span className="text-[10px] font-mono font-semibold px-2.5 py-1 rounded-full bg-neutral-900 text-neutral-400 border border-neutral-800 uppercase">
+            STANDBY / IDLE
           </span>
         )}
       </div>
 
-      {isChallengeActive ? (
-        <div className="space-y-2.5 my-auto">
-          {/* Prompt Banner */}
-          <div className="rounded-lg p-3 bg-[#070A18] border border-amber-500/30 text-center relative overflow-hidden">
-            <div className="text-[9px] font-mono text-amber-400/80 uppercase tracking-widest mb-1 flex items-center justify-center gap-1">
-              <Mic size={11} className="animate-pulse text-amber-400" />
-              <span>PLEASE READ ALOUD THE PHONETIC PROMPT</span>
-            </div>
-            <p className="text-xs sm:text-sm font-mono font-bold text-white tracking-wide italic">
-              "{phrase}"
-            </p>
-          </div>
-
-          {/* Biometric Analysis Meters */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs font-mono">
-            <div className="bg-[#070A18] p-2 rounded border border-white/[0.04]">
-              <span className="text-[9px] text-white/40 block">VOCAL STABILITY</span>
-              <span className="font-bold text-emerald-400">{stability.toFixed(0)}%</span>
-            </div>
-            <div className="bg-[#070A18] p-2 rounded border border-white/[0.04]">
-              <span className="text-[9px] text-white/40 block">PHONETIC CLARITY</span>
-              <span className="font-bold text-sky-400">{Math.min(94, stability * 1.1).toFixed(0)}%</span>
-            </div>
-            <div className="bg-[#070A18] p-2 rounded border border-white/[0.04]">
-              <span className="text-[9px] text-white/40 block">RESPONSE LATENCY</span>
-              <span className="font-bold text-cyan-300">1.24s</span>
-            </div>
-            <div className="bg-[#070A18] p-2 rounded border border-white/[0.04]">
-              <span className="text-[9px] text-white/40 block">BIOMETRIC CAPTURE</span>
-              <span className="font-bold text-purple-400">ACTIVE</span>
-            </div>
-          </div>
+      {/* Main Phrase Prompt */}
+      <div className="space-y-2 my-auto">
+        <div className="flex items-center justify-between text-[10px] font-mono text-neutral-400">
+          <span>DYNAMIC ALLOPHONE PROMPT</span>
+          <span className="text-cyan-400 font-semibold">ANTI-SYNTHESIS PASS</span>
         </div>
-      ) : (
-        <div className="py-4 flex flex-col items-center justify-center text-center gap-1.5 my-auto bg-[#070A18] rounded-lg border border-white/[0.04] p-3">
-          <Sparkles size={16} className="text-cyan-400/60 mb-0.5" />
-          <span className="text-xs font-mono font-semibold text-white/70">
-            Phonetic Challenge Standing By
-          </span>
-          <p className="text-[10px] font-mono text-white/40 max-w-sm">
-            Dynamic Hindi/English tongue-twister challenge is automatically dispatched when risk score reaches Amber (≥40) or Red (≥75).
+
+        <div className="p-4 rounded-xl bg-neutral-900/80 border border-neutral-800 text-center space-y-1">
+          <div className="text-[11px] font-mono text-neutral-400 uppercase tracking-widest">
+            Prompt Speaker to Read Aloud:
+          </div>
+          <div className="text-base sm:text-lg font-bold text-white tracking-tight font-serif italic text-glow-cyan">
+            &ldquo;{phrase}&rdquo;
+          </div>
+          <p className="text-[10px] font-mono text-neutral-400 pt-1">
+            Tests co-articulation boundaries, unvoiced plosive release bursts, and pitch tracking.
           </p>
         </div>
-      )}
+
+        {/* Vocal Stability Meter */}
+        {isChallengeActive && (
+          <div className="space-y-1 pt-1">
+            <div className="flex justify-between text-[10px] font-mono text-neutral-300">
+              <span>VOCAL BIOMETRIC STABILITY</span>
+              <span className="text-cyan-400 font-bold">{stability.toFixed(1)}%</span>
+            </div>
+            <div className="w-full bg-neutral-900 h-2 rounded-full overflow-hidden border border-neutral-800">
+              <div
+                className="h-full bg-cyan-400 rounded-full transition-all duration-300 shadow-[0_0_8px_rgba(6,182,212,0.8)]"
+                style={{ width: `${stability}%` }}
+              />
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Footer */}
-      <div className="flex items-center justify-between text-[10px] font-mono text-white/30 pt-2 border-t border-white/[0.04] mt-2">
-        <span>ISO/IEC 30107-3 Liveness PAD</span>
-        <span>ZERO BIOMETRIC LOG RETENTION</span>
+      <div className="flex items-center justify-between text-[10px] font-mono text-neutral-400 pt-3 border-t border-neutral-800/80">
+        <span>SECURITY LEVEL: ZERO-TRUST</span>
+        <span className="text-emerald-400 font-semibold">TTS-IMMUNE PROTOCOL</span>
       </div>
     </div>
   );

@@ -1,8 +1,3 @@
-/**
- * ThreatSignalList — Evidence Breakdown of Detection Signals
- * Connects directly to acoustic telemetry, ECAPA-TDNN embedding, and challenge state.
- */
-
 "use client";
 
 import React, { useMemo } from "react";
@@ -141,13 +136,13 @@ export default function ThreatSignalList() {
   };
 
   return (
-    <div className="w-full space-y-2">
-      <div className="flex items-center justify-between text-[11px] font-mono text-white/50 px-1">
-        <span>DETECTED THREAT SIGNALS</span>
+    <div className="w-full space-y-3">
+      <div className="flex items-center justify-between text-[11px] font-mono text-neutral-400 px-1 pb-1 border-b border-neutral-800/80">
+        <span className="uppercase tracking-wider">DETECTED THREAT EVIDENCE &amp; SIGNALS</span>
         <span>CONFIDENCE · WEIGHTED</span>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {signals.map((sig) => {
           const cfg = statusIcons[sig.status];
           const SigIcon = sig.icon;
@@ -156,7 +151,7 @@ export default function ThreatSignalList() {
           return (
             <div
               key={sig.id}
-              className="rounded-xl p-3 bg-[#070A18] border border-white/[0.06] flex flex-col justify-between transition-all duration-200 hover:border-white/20"
+              className="rounded-xl p-3.5 bg-neutral-900/60 border border-neutral-800/80 flex flex-col justify-between transition-all duration-200 hover:border-neutral-700"
               style={{
                 borderLeftWidth: 3,
                 borderLeftColor: cfg.color,
@@ -165,14 +160,14 @@ export default function ThreatSignalList() {
               <div className="flex items-start justify-between gap-2 mb-1.5">
                 <div className="flex items-center gap-2">
                   <div
-                    className="w-6 h-6 rounded-md flex items-center justify-center shrink-0"
+                    className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
                     style={{ background: cfg.bg, color: cfg.color }}
                   >
-                    <SigIcon size={13} />
+                    <SigIcon size={14} />
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold text-white leading-none">{sig.name}</h4>
-                    <span className="text-[9px] font-mono text-white/40 leading-none">{sig.category}</span>
+                    <h4 className="text-xs font-bold text-white leading-tight">{sig.name}</h4>
+                    <span className="text-[10px] font-mono text-neutral-400 leading-none">{sig.category}</span>
                   </div>
                 </div>
 
@@ -184,13 +179,13 @@ export default function ThreatSignalList() {
                 </span>
               </div>
 
-              <p className="text-[11px] font-mono text-white/70 leading-relaxed line-clamp-2 my-1">
+              <p className="text-[11px] font-mono text-neutral-300 leading-relaxed line-clamp-2 my-1">
                 {sig.description}
               </p>
 
-              <div className="flex items-center justify-between text-[9px] font-mono text-white/40 pt-1.5 border-t border-white/[0.04] mt-1">
+              <div className="flex items-center justify-between text-[9px] font-mono text-neutral-400 pt-2 border-t border-neutral-850 mt-1">
                 <span className="flex items-center gap-1">
-                  <StatusIcon size={10} style={{ color: cfg.color }} />
+                  <StatusIcon size={11} style={{ color: cfg.color }} />
                   <span style={{ color: cfg.color }} className="font-semibold">{cfg.badge}</span>
                 </span>
                 <span>CONFIDENCE: {sig.confidence.toUpperCase()}</span>

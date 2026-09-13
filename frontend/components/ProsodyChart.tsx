@@ -1,6 +1,5 @@
 /**
- * ProsodyChart — Real-time rolling line chart for F0, jitter, shimmer, HNR
- * Built with Recharts with fixed height constraints and non-overlapping pinned metrics header.
+ * ProsodyChart — Real-time rolling line chart for F0, jitter, shimmer, HNR (Dark SecOps Theme)
  */
 
 "use client";
@@ -100,7 +99,7 @@ export default function ProsodyChart() {
               yAxisId="hnr"
               type="monotone"
               dataKey="hnr"
-              stroke="#34D399"
+              stroke="#10B981"
               strokeWidth={1.5}
               dot={false}
               isAnimationActive={false}

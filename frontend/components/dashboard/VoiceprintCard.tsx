@@ -1,20 +1,12 @@
-/**
- * VoiceprintCard — ECAPA-TDNN 192-dim Voiceprint Analysis
- * Section 3 (Right Column) with pgvector cosine similarity matching and spoof classification.
- */
-
 "use client";
 
 import React, { useMemo } from "react";
 import { useTelemetryStore } from "@/store/useTelemetryStore";
 import {
-  Database,
   Fingerprint,
   ShieldCheck,
   ShieldAlert,
   ShieldX,
-  Layers,
-  Sparkles,
 } from "lucide-react";
 
 export default function VoiceprintCard() {
@@ -61,21 +53,21 @@ export default function VoiceprintCard() {
   }, [sim]);
 
   return (
-    <div className="bg-[#0A0F26]/90 border border-white/[0.08] rounded-xl p-4 flex flex-col justify-between shadow-lg transition-all duration-200 hover:border-purple-500/30">
+    <div className="bg-neutral-950/70 border border-neutral-800/80 rounded-2xl backdrop-blur-md p-5 shadow-2xl flex flex-col justify-between space-y-4">
       {/* Header */}
-      <div className="flex items-center justify-between mb-2.5">
+      <div className="flex items-center justify-between pb-3 border-b border-neutral-800/80">
         <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
-            <Fingerprint size={14} />
+          <div className="w-8 h-8 rounded-lg bg-purple-500/10 border border-purple-500/25 flex items-center justify-center text-purple-400">
+            <Fingerprint size={16} />
           </div>
           <div>
-            <h3 className="text-xs font-bold text-white tracking-wide">Voiceprint Analysis (ECAPA-TDNN)</h3>
-            <p className="text-[10px] font-mono text-white/40">192-dim pgvector Speaker Verification</p>
+            <h3 className="text-sm font-bold text-white tracking-wide">Voiceprint Analysis (ECAPA-TDNN)</h3>
+            <p className="text-[10px] font-mono text-neutral-400">192-dim pgvector Speaker Verification</p>
           </div>
         </div>
 
         <span
-          className="text-[9px] font-mono font-semibold px-2 py-0.5 rounded uppercase"
+          className="text-[10px] font-mono font-bold px-2.5 py-1 rounded-full uppercase"
           style={{
             background: tier2Triggered ? "rgba(168,85,247,0.15)" : "rgba(255,255,255,0.05)",
             color: tier2Triggered ? "#C084FC" : "#9CA3AF",
@@ -87,14 +79,14 @@ export default function VoiceprintCard() {
       </div>
 
       {/* Main Body */}
-      <div className="space-y-3 my-auto">
+      <div className="space-y-4 my-auto">
         {/* 192-dim embedding bars */}
         <div>
-          <div className="flex justify-between text-[9px] font-mono text-white/40 mb-1">
+          <div className="flex justify-between text-[10px] font-mono text-neutral-400 mb-1.5">
             <span>192-DIM EMBEDDING RESIDUALS</span>
-            <span>SPEAKER: speaker-demo-01</span>
+            <span className="text-cyan-400 font-semibold">SPEAKER: speaker-demo-01</span>
           </div>
-          <div className="flex gap-0.5 h-6 items-end overflow-hidden rounded bg-[#070A18] p-1 border border-white/[0.04]">
+          <div className="flex gap-0.5 h-8 items-end overflow-hidden rounded-xl bg-neutral-900/60 p-1.5 border border-neutral-800/80">
             {Array.from({ length: 48 }).map((_, i) => {
               const val = Math.sin(i * 0.45 + sim * 4) * 0.5 + 0.5;
               const h = Math.max(15, val * 90);
@@ -114,14 +106,14 @@ export default function VoiceprintCard() {
         </div>
 
         {/* Cosine Similarity Gauge */}
-        <div>
-          <div className="flex justify-between text-[11px] font-mono mb-1">
-            <span className="text-white/50 font-semibold">COSINE SIMILARITY</span>
+        <div className="space-y-1.5">
+          <div className="flex justify-between text-[11px] font-mono">
+            <span className="text-neutral-400 font-semibold uppercase tracking-wider">Cosine Similarity</span>
             <span className="font-bold text-sm" style={{ color: classification.color }}>
-              {sim.toFixed(3)}
+              {sim.toFixed(4)}
             </span>
           </div>
-          <div className="h-2 rounded-full bg-white/[0.06] overflow-hidden p-0.5">
+          <div className="h-2.5 rounded-full bg-neutral-900 overflow-hidden p-0.5 border border-neutral-800">
             <div
               className="h-full rounded-full transition-all duration-300 shadow-sm"
               style={{
@@ -131,29 +123,29 @@ export default function VoiceprintCard() {
               }}
             />
           </div>
-          <div className="flex justify-between text-[9px] font-mono text-white/30 mt-1">
+          <div className="flex justify-between text-[9px] font-mono text-neutral-400">
             <span>0.0 (SPOOF)</span>
-            <span className="text-white/50">0.60 (THRESHOLD)</span>
+            <span className="text-neutral-400">0.60 (THRESHOLD)</span>
             <span>1.0 (MATCH)</span>
           </div>
         </div>
 
         {/* Classification Verdict Badge */}
         <div
-          className="rounded-lg px-3 py-2 text-center text-xs font-bold font-mono tracking-wider transition-all flex items-center justify-center gap-1.5"
+          className="rounded-xl px-4 py-2.5 text-center text-xs font-bold font-mono tracking-wider transition-all flex items-center justify-center gap-2"
           style={{
             background: classification.bg,
             border: `1px solid ${classification.border}`,
             color: classification.color,
           }}
         >
-          <classification.Icon size={14} />
+          <classification.Icon size={15} />
           <span>{classification.verdict}</span>
         </div>
       </div>
 
       {/* Footer Metadata */}
-      <div className="flex items-center justify-between text-[10px] font-mono text-white/40 pt-2 border-t border-white/[0.04] mt-2">
+      <div className="flex items-center justify-between text-[10px] font-mono text-neutral-400 pt-3 border-t border-neutral-800/80">
         <span>MODEL: speechbrain/spkrec-ecapa</span>
         <span>COSINE DISTANCE: {(1 - sim).toFixed(3)}</span>
       </div>

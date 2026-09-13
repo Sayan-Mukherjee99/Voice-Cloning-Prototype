@@ -1,12 +1,8 @@
-/**
- * TransactionSecurityCard — Final Financial Transaction Security Gate
- * Section 7: Live UPI/Wire transfer authorization with deterministic blocking on risk >= 75.
- */
-
 "use client";
 
 import React, { useState, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
+import MetalButton from "@/components/ui/MetalButton";
 import { useTelemetryStore } from "@/store/useTelemetryStore";
 import {
   Building2,
@@ -14,14 +10,10 @@ import {
   ShieldCheck,
   ShieldAlert,
   ShieldX,
-  Lock,
   Unlock,
   CheckCircle2,
   Loader2,
   RotateCcw,
-  Send,
-  AlertTriangle,
-  ArrowRight,
 } from "lucide-react";
 
 function PinDot({ filled }: { filled: boolean }) {
@@ -80,7 +72,7 @@ export default function TransactionSecurityCard() {
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
                 session_id: sessionId || "demo-session",
-                amount_inr: transaction.amount || 25000,
+                amount_inr: transaction.amount || 150000,
                 beneficiary_vpa: transaction.beneficiaryVpa || "xyz@oksbi",
               }),
             });
@@ -100,8 +92,9 @@ export default function TransactionSecurityCard() {
               setPin("");
             }
           } catch {
+            // Local fallback simulation
             if (riskScore >= 75) {
-              const reason = `Transaction Frozen: High-confidence voice clone detected (${riskScore.toFixed(0)}/100).`;
+              const reason = `Transaction blocked: Risk score (${riskScore.toFixed(1)}/100) exceeds threshold.`;
               lockTransaction(reason);
               setErrorMessage(reason);
             } else {
@@ -112,7 +105,7 @@ export default function TransactionSecurityCard() {
           } finally {
             setApproving(false);
           }
-        }, 500);
+        }, 800);
       }
     },
     [pin, sessionId, transaction.amount, transaction.beneficiaryVpa, riskScore, lockTransaction]
@@ -123,30 +116,30 @@ export default function TransactionSecurityCard() {
   }, []);
 
   const handleReset = useCallback(() => {
-    unlockTransaction();
     setApproved(false);
     setShowPin(false);
     setPin("");
     setErrorMessage(null);
+    unlockTransaction();
   }, [unlockTransaction]);
 
   const decisionConfig = isRed
     ? {
-        title: "🚨 TRANSACTION BLOCKED",
-        statusBadge: "HARD LOCKED",
+        title: "🚨 TRANSACTION HARD BLOCKED",
+        statusBadge: "HARD BLOCKED",
         reason:
-          transaction.lockReason ||
-          "Synthetic voice indicators exceed security threshold (Risk ≥ 75).",
+          errorMessage ||
+          "Generative voice cloning attack signature detected. Authorization locked.",
         color: "#EF4444",
         bg: "rgba(239, 68, 68, 0.12)",
-        border: "rgba(239, 68, 68, 0.4)",
+        border: "rgba(239, 68, 68, 0.35)",
         Icon: ShieldX,
       }
     : isAmber
     ? {
-        title: "⚠ ADDITIONAL VERIFICATION REQUIRED",
-        statusBadge: "CHALLENGE PENDING",
-        reason: "Elevated risk score · PITCH phonetic challenge required before settlement.",
+        title: "⚠️ SUSPICIOUS VOICE: VERIFICATION REQUIRED",
+        statusBadge: "CHALLENGE REQUIRED",
+        reason: "Prosodic anomalies detected. Phonetic PITCH challenge must be recited.",
         color: "#F59E0B",
         bg: "rgba(245, 158, 11, 0.12)",
         border: "rgba(245, 158, 11, 0.35)",
@@ -164,21 +157,20 @@ export default function TransactionSecurityCard() {
 
   return (
     <div
-      className="bg-[#0A0F26]/90 rounded-xl p-4 flex flex-col justify-between shadow-xl transition-all duration-300"
+      className="bg-neutral-950/70 border border-neutral-800/80 rounded-2xl backdrop-blur-md p-5 shadow-2xl flex flex-col justify-between space-y-4"
       style={{
-        border: `1px solid ${decisionConfig.border}`,
-        boxShadow: isRed ? "0 0 25px rgba(239, 68, 68, 0.15)" : undefined,
+        boxShadow: isRed ? "0 0 35px rgba(239, 68, 68, 0.18)" : undefined,
       }}
     >
       {/* Header */}
-      <div className="flex items-center justify-between pb-3 border-b border-white/[0.06]">
+      <div className="flex items-center justify-between pb-3 border-b border-neutral-800/80">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-cyan-400">
+          <div className="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400">
             <Building2 size={16} />
           </div>
           <div>
             <h3 className="text-sm font-bold text-white tracking-wide">SBI YONO · UPI Transaction Gate</h3>
-            <p className="text-[10px] font-mono text-white/40">Pre-Transaction Zero-Trust Interceptor</p>
+            <p className="text-[10px] font-mono text-neutral-400">Pre-Transaction Zero-Trust Interceptor</p>
           </div>
         </div>
 
@@ -196,33 +188,33 @@ export default function TransactionSecurityCard() {
       </div>
 
       {/* Transaction Metadata */}
-      <div className="grid grid-cols-3 gap-2.5 my-3.5">
-        <div className="bg-[#070A18] p-3 rounded-lg border border-white/[0.04]">
-          <span className="text-[9px] font-mono text-white/40 uppercase block mb-0.5">Amount</span>
+      <div className="grid grid-cols-3 gap-2.5">
+        <div className="bg-neutral-900/60 p-3 rounded-xl border border-neutral-800/80">
+          <span className="text-[9px] font-mono text-neutral-400 uppercase block mb-0.5">Amount</span>
           <span className="text-base sm:text-lg font-bold font-mono text-white flex items-center">
             <IndianRupee size={15} className="text-cyan-400" />
-            {(transaction.amount || 25000).toLocaleString("en-IN")}
+            {(transaction.amount || 150000).toLocaleString("en-IN")}
           </span>
         </div>
 
-        <div className="bg-[#070A18] p-3 rounded-lg border border-white/[0.04]">
-          <span className="text-[9px] font-mono text-white/40 uppercase block mb-0.5">Beneficiary</span>
+        <div className="bg-neutral-900/60 p-3 rounded-xl border border-neutral-800/80">
+          <span className="text-[9px] font-mono text-neutral-400 uppercase block mb-0.5">Beneficiary</span>
           <span className="text-xs sm:text-sm font-bold font-mono text-cyan-300 truncate block">
-            {transaction.beneficiaryVpa || "xyz@oksbi"}
+            {transaction.beneficiaryVpa || "unknown@axisbank"}
           </span>
         </div>
 
-        <div className="bg-[#070A18] p-3 rounded-lg border border-white/[0.04]">
-          <span className="text-[9px] font-mono text-white/40 uppercase block mb-0.5">Risk Score</span>
+        <div className="bg-neutral-900/60 p-3 rounded-xl border border-neutral-800/80">
+          <span className="text-[9px] font-mono text-neutral-400 uppercase block mb-0.5">Risk Score</span>
           <span className="text-base sm:text-lg font-bold font-mono" style={{ color: decisionConfig.color }}>
-            {riskScore.toFixed(0)} <span className="text-xs text-white/40">/ 100</span>
+            {riskScore.toFixed(0)} <span className="text-xs text-neutral-400">/ 100</span>
           </span>
         </div>
       </div>
 
       {/* Decision Banner */}
       <div
-        className="rounded-lg p-3 my-1 flex flex-col gap-1 transition-all"
+        className="rounded-xl p-3.5 flex flex-col gap-1 transition-all"
         style={{
           background: decisionConfig.bg,
           border: `1px solid ${decisionConfig.border}`,
@@ -234,44 +226,47 @@ export default function TransactionSecurityCard() {
             {decisionConfig.title}
           </span>
         </div>
-        <p className="text-[11px] font-mono text-white/70 leading-tight pl-6">
+        <p className="text-[11px] font-mono text-neutral-300 leading-tight pl-6">
           {decisionConfig.reason}
         </p>
       </div>
 
-      {/* Actions / PIN Form */}
-      <div className="mt-3 pt-3 border-t border-white/[0.06]">
+      {/* Actions / 21st.dev Metal Button Gate */}
+      <div className="pt-2">
         {approved ? (
-          <div className="flex items-center justify-between p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30">
+          <div className="flex items-center justify-between p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30">
             <div className="flex items-center gap-2 text-emerald-300 text-xs font-mono font-semibold">
-              <CheckCircle2 size={15} className="text-emerald-400" />
-              <span>Payment Dispatched & Authorized</span>
+              <CheckCircle2 size={16} className="text-emerald-400" />
+              <span>Payment Dispatched &amp; Authorized (₹{(transaction.amount || 150000).toLocaleString("en-IN")})</span>
             </div>
             <button
               onClick={handleReset}
-              className="flex items-center gap-1 text-[10px] font-mono text-emerald-400 hover:text-emerald-200 px-2 py-1 rounded bg-white/5 hover:bg-white/10"
+              className="flex items-center gap-1 text-[10px] font-mono text-emerald-400 hover:text-white px-2.5 py-1 rounded-lg bg-neutral-900 border border-neutral-800 transition-colors cursor-pointer"
             >
-              <RotateCcw size={10} />
-              <span>Reset Demo</span>
+              <RotateCcw size={11} />
+              <span>Reset</span>
             </button>
           </div>
         ) : isRed ? (
-          <div className="flex items-center justify-between p-2.5 rounded-lg bg-rose-500/10 border border-rose-500/30">
-            <div className="flex items-center gap-2 text-rose-300 text-xs font-mono">
-              <ShieldX size={15} className="text-rose-400 shrink-0" />
-              <span className="font-semibold">Transaction Frozen: Synthetic Voice Detected</span>
+          <div className="space-y-3">
+            <MetalButton
+              disabled={true}
+              isLocked={true}
+              amountText={`₹${(transaction.amount || 150000).toLocaleString("en-IN")}`}
+            />
+            <div className="flex justify-end">
+              <button
+                onClick={handleReset}
+                className="flex items-center gap-1 text-[10px] font-mono text-rose-400 hover:text-rose-200 transition-colors px-2 py-1 rounded bg-neutral-900 border border-neutral-800 cursor-pointer"
+              >
+                <Unlock size={11} />
+                <span>Override / Reset Gate</span>
+              </button>
             </div>
-            <button
-              onClick={handleReset}
-              className="flex items-center gap-1 text-[10px] font-mono text-rose-300 hover:text-white px-2.5 py-1 rounded bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/40 transition-colors"
-            >
-              <Unlock size={11} />
-              <span>Override / Unlock</span>
-            </button>
           </div>
         ) : showPin ? (
-          <div className="flex flex-col items-center gap-2.5 bg-[#070A18] p-3 rounded-lg border border-white/[0.05]">
-            <div className="flex items-center justify-between w-full text-xs font-mono text-white/60">
+          <div className="flex flex-col items-center gap-2.5 bg-neutral-900/60 p-4 rounded-xl border border-neutral-800/80">
+            <div className="flex items-center justify-between w-full text-xs font-mono text-neutral-400">
               <span>ENTER 6-DIGIT UPI PIN</span>
               <div className="flex gap-2">
                 {[0, 1, 2, 3, 4, 5].map((i) => (
@@ -280,7 +275,7 @@ export default function TransactionSecurityCard() {
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-1.5 w-full max-w-xs">
+            <div className="grid grid-cols-3 gap-1.5 w-full max-w-xs pt-1">
               {["1", "2", "3", "4", "5", "6", "7", "8", "9", "Cancel", "0", "Del"].map((key) => (
                 <button
                   key={key}
@@ -290,7 +285,7 @@ export default function TransactionSecurityCard() {
                     else if (key === "Del") handlePinDelete();
                     else handlePinDigit(key);
                   }}
-                  className="py-1.5 rounded bg-white/5 hover:bg-white/10 active:bg-cyan-500/20 text-xs font-mono font-bold text-white transition-all disabled:opacity-50"
+                  className="py-2 rounded-lg bg-neutral-900 hover:bg-neutral-800 active:bg-cyan-500/20 text-xs font-mono font-bold text-white transition-all disabled:opacity-50 border border-neutral-800 cursor-pointer"
                 >
                   {key}
                 </button>
@@ -299,37 +294,19 @@ export default function TransactionSecurityCard() {
 
             {approving && (
               <div className="flex items-center gap-2 text-[11px] font-mono text-cyan-400 mt-1">
-                <Loader2 size={12} className="animate-spin" />
+                <Loader2 size={13} className="animate-spin" />
                 <span>Evaluating Pre-Transaction Security Gate...</span>
               </div>
             )}
           </div>
         ) : (
-          <button
+          <MetalButton
             onClick={handleAuthorizeClick}
             disabled={isLocked}
-            className="w-full py-2.5 rounded-lg text-xs font-mono font-bold tracking-wider uppercase transition-all flex items-center justify-center gap-2 shadow-lg"
-            style={{
-              background: isLocked
-                ? "rgba(239, 68, 68, 0.15)"
-                : "linear-gradient(135deg, #0284C7, #0369A1)",
-              color: isLocked ? "#EF4444" : "#FFFFFF",
-              border: `1px solid ${isLocked ? "rgba(239,68,68,0.4)" : "#38BDF8"}`,
-              cursor: isLocked ? "not-allowed" : "pointer",
-            }}
-          >
-            {isLocked ? (
-              <>
-                <Lock size={13} />
-                <span>Transfer Blocked by VaaniShield</span>
-              </>
-            ) : (
-              <>
-                <Send size={13} />
-                <span>Authorize Transfer (UPI PIN)</span>
-              </>
-            )}
-          </button>
+            isLocked={isLocked}
+            loading={approving}
+            amountText={`₹${(transaction.amount || 150000).toLocaleString("en-IN")}`}
+          />
         )}
       </div>
     </div>

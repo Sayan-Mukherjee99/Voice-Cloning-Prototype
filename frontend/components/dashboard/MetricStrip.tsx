@@ -1,5 +1,5 @@
 /**
- * MetricStrip — Compact Key Voice Metrics Row
+ * MetricStrip — Compact Key Voice Metrics Row (Dark SecOps Theme)
  * Displays F0, Jitter, Shimmer, HNR, VAD, and Latency with real-time status & units.
  */
 
@@ -7,14 +7,6 @@
 
 import React, { useMemo } from "react";
 import { useTelemetryStore } from "@/store/useTelemetryStore";
-import {
-  Activity,
-  BarChart2,
-  Clock,
-  Radio,
-  Sliders,
-  Sparkles,
-} from "lucide-react";
 
 interface MetricItem {
   id: string;
@@ -30,7 +22,6 @@ interface MetricItem {
 export default function MetricStrip() {
   const latestSnapshot = useTelemetryStore((s) => s.latestSnapshot);
   const latencyMs = useTelemetryStore((s) => s.latencyMs);
-  const threatLevel = useTelemetryStore((s) => s.threatLevel);
 
   const metrics = useMemo<MetricItem[]>(() => {
     const f0 = latestSnapshot?.f0Mean ?? 142;
@@ -139,9 +130,9 @@ export default function MetricStrip() {
   }, [latestSnapshot, latencyMs]);
 
   const statusColors = {
-    good: { dot: "bg-emerald-400", text: "text-emerald-400", bg: "rgba(16,185,129,0.1)" },
-    warning: { dot: "bg-amber-400", text: "text-amber-400", bg: "rgba(245,158,11,0.1)" },
-    alert: { dot: "bg-rose-400", text: "text-rose-400", bg: "rgba(239,68,68,0.12)" },
+    good: { dot: "bg-emerald-400", text: "text-emerald-400" },
+    warning: { dot: "bg-amber-400", text: "text-amber-400" },
+    alert: { dot: "bg-rose-400", text: "text-rose-400" },
   };
 
   return (
@@ -152,12 +143,12 @@ export default function MetricStrip() {
           return (
             <div
               key={m.id}
-              className="bg-[#0A0F26]/90 border border-white/[0.08] rounded-xl p-3 flex flex-col justify-between transition-all duration-200 hover:border-white/20 shadow-sm"
+              className="bg-neutral-900/60 border border-neutral-800 rounded-xl p-3.5 flex flex-col justify-between transition-all duration-200 hover:border-neutral-700 backdrop-blur-md shadow-md"
             >
               {/* Header */}
-              <div className="flex items-center justify-between text-white/40 text-[9px] font-mono mb-1">
-                <span className="font-bold tracking-wider uppercase">{m.label}</span>
-                <span className="text-white/30 truncate max-w-[60px]">{m.subLabel}</span>
+              <div className="flex items-center justify-between text-neutral-400 text-[9px] font-mono mb-1">
+                <span className="font-bold tracking-wider uppercase text-neutral-300">{m.label}</span>
+                <span className="text-neutral-500 truncate max-w-[60px]">{m.subLabel}</span>
               </div>
 
               {/* Metric Value */}
@@ -165,11 +156,11 @@ export default function MetricStrip() {
                 <span className="text-xl sm:text-2xl font-black font-mono tracking-tight text-white">
                   {m.value}
                 </span>
-                <span className="text-[11px] font-mono text-white/40 font-semibold">{m.unit}</span>
+                <span className="text-[11px] font-mono text-neutral-400 font-semibold">{m.unit}</span>
               </div>
 
               {/* Status Indicator */}
-              <div className="flex items-center gap-1.5 pt-1 border-t border-white/[0.04] text-[9px] font-mono mt-0.5">
+              <div className="flex items-center gap-1.5 pt-1.5 border-t border-neutral-800 text-[9px] font-mono mt-0.5">
                 <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
                 <span className={`${cfg.text} font-semibold truncate`}>{m.statusText}</span>
               </div>

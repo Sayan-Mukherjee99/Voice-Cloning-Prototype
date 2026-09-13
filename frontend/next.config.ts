@@ -10,6 +10,9 @@ const nextConfig: NextConfig = {
   // Turbopack (Next.js 16 default) — empty config silences the missing-config warning
   turbopack: {},
 
+  // Disable Next.js dev indicator 'N' button in development
+  devIndicators: false,
+
   // Security headers
   async headers() {
     return [

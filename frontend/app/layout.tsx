@@ -29,7 +29,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#070818",
+  themeColor: "#08080a",
   colorScheme: "dark",
 };
 
@@ -40,7 +40,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${inter.variable} dark`} suppressHydrationWarning>
-      <body className="antialiased bg-[#070818] text-white overflow-x-hidden">
+      <body className="min-h-screen bg-[#08080a] text-neutral-100 antialiased overflow-x-hidden">
         {children}
       </body>
     </html>
