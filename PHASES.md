@@ -1,80 +1,164 @@
-# VaaniShield: Parallel Engineering Roadmap & Execution Plan
+# VaaniShield: Parallel Engineering Roadmap & Two-Developer Execution Plan
 
 | Document Attribute | Specification Detail |
 | :--- | :--- |
-| **Document Version** | 2.0.0-PARALLEL-ROADMAP |
+| **Document Version** | 2.1.0-OWNERSHIP-PARALLEL-ROADMAP |
 | **Status** | Approved Engineering Execution Baseline |
 | **Project** | VaaniShield (वाणिShield) — Real-Time Voice Integrity & Anti-Spoofing Platform |
 | **Repository Reference** | `Sayan-Mukherjee99/Voice-Cloning-Prototype` |
 | **Associated Documents** | `PRD.md`, `TRD.md`, `SECURITY.md`, `AI_ARCHITECTURE.md`, `AI_INSTRUCTIONS.md`, `MEMORY.md` |
-| **Lead Strategy** | Contract-First Parallel Development (Backend/AI Track || Frontend Track) |
+| **Development Model** | Two-Developer Contract-First Parallel Execution (Backend/AI Track || Frontend Track) |
+| **Person A (Backend / AI Lead)** | **Shub** |
+| **Person B (Frontend Lead)** | **Sion** |
 
 ---
 
 ## Table of Contents
 
-1. [Roadmap Strategy & Parallelization Model](#1-roadmap-strategy--parallelization-model)
-2. [Contract-First Development & Interface Specifications](#2-contract-first-development--interface-specifications)
-3. [Section A: Shared Foundation (A0–A4)](#3-section-a-shared-foundation-a0a4)
-4. [Section B: Backend / AI Track (B1–B20)](#4-section-b-backend--ai-track-b1b20)
-5. [Section C: Frontend Track (C1–C17)](#5-section-c-frontend-track-c1c17)
-6. [Section D: Integration Track (D1–D10)](#6-section-d-integration-track-d1d10)
-7. [Section E: Final Validation & Demo Track (E1–E10)](#7-section-e-final-validation--demo-track-e1e10)
-8. [Parallelization Matrix & Execution Graph](#8-parallelization-matrix--execution-graph)
-9. [MVP Cut Line & Priority Governance](#9-mvp-cut-line--priority-governance)
-10. [Anti-Over-Engineering Charter](#10-anti-over-engineering-charter)
-11. [Git Safety Protocol & Memory Governance](#11-git-safety-protocol--memory-governance)
-12. [Checklists & Demo Runbook](#12-checklists--demo-runbook)
+1. [Project Development Ownership & Team Roles](#1-project-development-ownership--team-roles)
+2. [Frontend Design Customization & Handoff Workflow](#2-frontend-design-customization--handoff-workflow)
+3. [Contract-First Development & Frozen Interfaces](#3-contract-first-development--frozen-interfaces)
+4. [Section A: Shared Foundation (A0–A4) [Joint Ownership]](#4-section-a-shared-foundation-a0a4-joint-ownership)
+5. [Section B: Backend / AI Track (B1–B20) [Owner: Person A — Shub]](#5-section-b-backend--ai-track-b1b20-owner-person-a--shub)
+6. [Section C: Frontend Track (C1–C17) [Owner: Person B — Sion]](#6-section-c-frontend-track-c1c17-owner-person-b--sion)
+7. [Section D: Integration Track (D1–D10) [Joint Ownership]](#7-section-d-integration-track-d1d10-joint-ownership)
+8. [Section E: Final Validation & Demo Track (E1–E10) [Joint Ownership]](#8-section-e-final-validation--demo-track-e1e10-joint-ownership)
+9. [Detailed Dependency Matrix](#9-detailed-dependency-matrix)
+10. [Two Critical Paths & Execution Architecture](#10-two-critical-paths--execution-architecture)
+11. [MVP Cut Line & Scope Boundaries](#11-mvp-cut-line--scope-boundaries)
+12. [Anti-Over-Engineering Charter](#12-anti-over-engineering-charter)
+13. [Git Safety Rules & Memory Governance](#13-git-safety-rules--memory-governance)
+14. [Checklists & 5-Minute Live Demo Runbook](#14-checklists--5-minute-live-demo-runbook)
+15. [Two-Developer Operational Governance FAQ](#15-two-developer-operational-governance-faq)
 
 ---
 
-## 1. Roadmap Strategy & Parallelization Model
+## 1. Project Development Ownership & Team Roles
 
-### 1.1 The Tight-Timeline Dual-Track Reality
-VaaniShield has a strict delivery window for hackathon demonstration. To maximize delivery speed while guaranteeing technical credibility, development is bifurcated into two concurrent execution tracks decoupled by an unyielding **Contract-First** interface boundary:
-
-* **PRIMARY IMMEDIATE FOCUS (Backend / AI / Infrastructure Track)**: Implemented immediately to replace mock inference with real DSP and neural models (Silero VAD, 80-bin mel spectrograms, Praat Parselmouth prosody, quantized ResNet-18, Asymmetric EMA, and synchronous Pre-Transaction Authorization Gate).
-* **SECONDARY PARALLEL FOCUS (Frontend Track)**: Executed concurrently by a dedicated frontend developer using frozen TypeScript types, WebSocket message schemas, and calibrated mock data generators (`useSimulator.ts`), completely independent of backend availability.
-* **FINAL FOCUS (Integration & Demo Track)**: Converges both tracks for end-to-end telemetry synchronization, real audio verification, attack validation, and demo stabilization.
+The VaaniShield platform is developed under an explicit two-person parallel ownership model. Development proceeds concurrently across two decoupled tracks, bounded strictly by frozen API and WebSocket contracts established in Section A.
 
 ```
-                                  ┌───────────────────────────────┐
-                                  │ SECTION A: SHARED FOUNDATION  │
-                                  │ (A0 - A4: Specs, Contracts)   │
-                                  └───────────────┬───────────────┘
-                                                  │ CONTRACT FREEZE
-                        ┌─────────────────────────┴─────────────────────────┐
-                        ▼                                                   ▼
-         ┌─────────────────────────────┐                     ┌─────────────────────────────┐
-         │  SECTION B: BACKEND/AI      │                     │  SECTION C: FRONTEND TRACK  │
-         │  (Primary Immediate Track)  │                     │  (Parallel UI Track)        │
-         │  B1 ──► B2 ──► B3 ──► B4    │                     │  C1 ──► C2 ──► C3 ──► C4    │
-         │  B5 ──► B6 ──► B7 ──► B8    │     PARALLEL        │  C5 ──► C6 ──► C7 ──► C8    │
-         │  B9 ──► B10 ──► B11 ──► B12 │    CONCURRENT       │  C9 ──► C10 ──► C11 ──► C12 │
-         │  B13 ──► B14 ──► B15 ──► B16│    EXECUTION        │  C13 ──► C14 ──► C15 ──► C16│
-         │  B17 ──► B18 ──► B19 ──► B20│                     │  C17                        │
-         └──────────────┬──────────────┘                     └──────────────┬──────────────┘
-                        │ READY FOR INTEGRATION                             │ READY FOR INTEGRATION
-                        └─────────────────────────┬─────────────────────────┘
-                                                  ▼
-                                  ┌───────────────────────────────┐
-                                  │ SECTION D: INTEGRATION TRACK  │
-                                  │ (D1 - D10: E2E Pipeline Wire) │
-                                  └───────────────┬───────────────┘
-                                                  ▼
-                                  ┌───────────────────────────────┐
-                                  │ SECTION E: FINAL VALIDATION   │
-                                  │ (E1 - E10: Hardening & Demo)  │
-                                  └───────────────────────────────┘
+                    SHARED FOUNDATION (A0 - A4)
+                     [Joint: Shub & Sion]
+                              │
+               ┌──────────────┴──────────────┐
+               ▼                             ▼
+       PERSON A — SHUB               PERSON B — SION
+     BACKEND / AI TRACK              FRONTEND TRACK
+       (Phases B1 - B20)             (Phases C1 - C17)
+               │                             │
+               │ [Contract-First / Mocks]    │ [Design Handoff Layer]
+               │                             │
+               └──────────────┬──────────────┘
+                              ▼
+                   INTEGRATION TRACK (D1 - D10)
+                     [Joint: Shub & Sion]
+                              │
+                              ▼
+                FINAL VALIDATION TRACK (E1 - E10)
+                     [Joint: Shub & Sion]
+                              │
+                              ▼
+                   5-MINUTE LIVE DEMO FREEZE
 ```
+
+### 1.1 Person A — Shub (Role: Backend / AI Developer)
+Shub has end-to-end technical ownership of the backend, signal processing, AI model serving, and data layers:
+* **FastAPI Architecture**: Core app lifecycle, routing, middleware, CORS, error handling, and settings.
+* **Audio Streaming & Transport**: WebSocket `/v1/stream/call/{session_id}` handling 16kHz 16-bit Mono Linear PCM.
+* **Buffering & Preprocessing**: Redis 7.2 circular ring buffer (`LPUSH` + `LTRIM`, 24 frames, 15s TTL).
+* **Voice Activity Detection (VAD)**: Silero VAD ONNX model execution and silence stripping.
+* **Spectral Analysis**: 80-bin log-mel filterbank extraction ($25\text{ ms}$ window, $10\text{ ms}$ hop).
+* **Biomechanical Prosody**: Praat Parselmouth C-bindings extraction ($F_0$, jitter RAP, shimmer APQ5, HNR dB).
+* **Anti-Spoofing Inference**: Quantized ResNet-18 ONNX model inference detecting vocoder upsampling artifacts.
+* **Speaker Verification**: ECAPA-TDNN 192-dim vector extraction and PostgreSQL `pgvector` cosine similarity.
+* **Multi-Signal Fusion & Risk**: Linear weighted score fusion and Asymmetric EMA temporal smoothing.
+* **Threat State Machine**: GREEN ($<40$), AMBER ($40–74.9$), RED ($\ge 75$) states with hysteresis.
+* **PITCH Backend**: Conversational challenge phrase selection, response latency, and intonation checks.
+* **Pre-Transaction Security Gate**: `POST /v1/transaction/evaluate-authorization` returning HTTP 200/403/428.
+* **Persistence & Caching**: PostgreSQL 16 schema migrations, asyncpg pooling, and Redis TTL enforcement.
+* **Security & Compliance**: Zero-storage raw audio audit (DPDP Act 2023), API key auth, and non-root containers.
+* **Backend Validation**: Pytest async test suite, latency profiling, and standalone backend demo readiness.
+* **Contract Compliance**: Strictly maintaining the frozen API and WebSocket interface schemas.
+
+> **CRITICAL RULE FOR PERSON A**: The verified Backend / AI roadmap (`B1` through `B20`) is preserved completely intact. Its sequence, dependencies, technical scope, and MVP priorities must not be altered merely because development is divided between two people.
+
+### 1.2 Person B — Sion (Role: Frontend Developer)
+Sion has end-to-end technical ownership of the client-side user interface, visualizations, and user experience:
+* **Next.js & React Architecture**: App Router, TypeScript type safety, layout components, and Zustand state store.
+* **Product Shell & Navigation**: Top header (`LimelightNavbar.tsx`), system health badges, and view routing.
+* **Voice Session Interface**: Call controls (Start/Stop, Mute, Mode Switcher between Live Mic and Simulated Attack).
+* **Telemetry Visualizations**: 4-card metric grid (VAD speech ratio, hop latency, HNR, analysis hops).
+* **Acoustic Waterfall**: 60 FPS HTML5 Canvas rendering 80-bin log-mel spectrogram with cybernetic palette.
+* **Prosody Time-Series**: Real-time charts rendering dynamic $F_0$ pitch curves, jitter, and shimmer.
+* **ThreatDial Gauge**: Radial gauge (`ThreatDial.tsx`) with animated spring physics and dynamic color glow.
+* **Threat State Alerts**: Screen perimeter glow and state banners switching between GREEN, AMBER, and RED.
+* **PITCH Challenge UI**: Animated sliding drawer (`PitchChallengeDrawer.tsx`) with bold Devanagari prompts.
+* **Interactive Mock Banking Gate**: Mobile UPI payment simulation (`MockBankingGate.tsx`) with PIN pad and RED lock.
+* **Forensic Evidence Drawer**: Expanding security event log detailing acoustic anomaly explanations.
+* **Session History & Audit View**: Tabular historical ledger matching database evaluation records.
+* **Client Networking**: Typed REST client (`lib/api/client.ts`) and WebSocket client (`useVaaniShieldWs.ts`).
+* **Resilience & Offline States**: Error boundaries, disconnect warning toasts, and automatic simulator fallbacks.
+* **Frontend Demo Readiness**: Standalone demo rehearsal with zero dependence on backend completion.
 
 ---
 
-## 2. Contract-First Development & Interface Specifications
+## 2. Frontend Design Customization & Handoff Workflow
 
-Both teams develop against strict contracts frozen in `TRD.md` and summarized below. Neither track may deviate without invoking the formal Contract Amendment Protocol.
+The technical architecture of the frontend is defined in Section C, but Sion's implementation supports an explicit, authoritative **Design Specification Layer** directed by Shub.
 
-### 2.1 REST Endpoints Contract
+### 2.1 The Design Specification Layer
+Shub may define authoritative design direction for the frontend without altering technical contracts:
+* **Typography & Fonts**: Font families (e.g., Outfit, Inter, JetBrains Mono), scale, weights, letter spacing.
+* **Color Palettes**: Hex/HSL color tokens, primary/secondary/accent tones, background `#0a0b0e`, border glows.
+* **Component Styling**: Glassmorphic card styling, button hover states, border-radius principles, elevation.
+* **Layout References & References**: Section hierarchy, landing page messaging, dashboard spacing.
+* **Data Visualization Style**: Spectrogram color palettes, ThreatDial needle styling, chart stroke widths.
+* **Motion & Animations**: Framer Motion spring physics, pulsing alerts, drawer transition curves.
+* **Visual Inspiration**: External reference URLs, UI component screenshots, and layout mockups.
+
+### 2.2 Frontend Implementation Priority Order
+When implementing Section C, Sion and Anti-Gravity must follow this strict priority hierarchy:
+1. **Existing Verified Product Requirements** (PRD capabilities, threat detection workflows).
+2. **Frozen API & WebSocket Contracts** (REST payloads, WebSocket telemetry schema).
+3. **Existing Frontend Architecture Decisions** (Next.js App Router, Zustand store, HTML5 Canvas).
+4. **Explicit Design Specifications Provided by Shub** (Visual styling, fonts, colors, layouts).
+5. **Usability & Accessibility** (Keyboard navigation, high-contrast readability, clear semantics).
+6. **Visual Polish & Micro-Animations** (Hover effects, spring physics, transition smoothing).
+7. **Minor Developer Implementation Preferences**.
+
+> **Design Constraint**: Functional correctness must never be sacrificed for visual aesthetics. Do not introduce an entirely new CSS framework (e.g., Tailwind v3 vs v4 conflicts) or heavy UI component libraries solely for styling.
+
+### 2.3 Step-by-Step 7-Stage Design Handoff Workflow
+```
+[Step 1: Shub Defines Specs] ──► [Step 2: Sion Inputs to Anti-Gravity] ──► [Step 3: Anti-Gravity Analyzes Repo]
+                                                                                        │
+[Step 6: Sion Iterates] ◄────── [Step 5: Visual Review] ◄────── [Step 4: Anti-Gravity Applies Styles]
+         │
+         ▼
+[Step 7: Final Contract & Functional Validation]
+```
+
+* **Step 1 (Design Direction)**: Shub provides design requirements (e.g., font choices, hex codes, layout reference URLs, or dashboard screenshots).
+* **Step 2 (Prompt Guidance)**: Sion provides these specifications to Anti-Gravity as styling and layout guidance.
+* **Step 3 (Structure Evaluation)**: Anti-Gravity evaluates the existing frontend components and style tokens (`globals.css`, Tailwind configuration).
+* **Step 4 (Surgical Styling)**: Anti-Gravity applies the design specifications to components without breaking data hooks or contract schemas.
+* **Step 5 (Visual Review)**: Sion inspects the rendered UI on `http://localhost:3000`.
+* **Step 6 (Iteration)**: Sion refines margins, responsive breakpoints, or color contrasts where necessary.
+* **Step 7 (Contract Verification)**: Sion confirms that all UI components continue to bind cleanly to the frozen data contracts.
+
+### 2.4 Mock-First Frontend Independence Rule
+Sion does not need to wait for Shub to finish backend phases. The frontend uses `useSimulator.ts` to generate calibrated mock data (sine-wave $F_0$ for human speech, flatline $F_0$ for clones, score escalation on attack toggle).
+* **Rule**: Mock data must follow the exact frozen contract schemas.
+* **Transition**: When backend phases finish, switching from mock to live data requires only changing the connection hook, with zero UI component rewrites.
+
+---
+
+## 3. Contract-First Development & Frozen Interfaces
+
+Both developers build against these immutable contracts. Neither track may modify these interfaces without invoking the formal Contract Amendment Protocol.
+
+### 3.1 REST Endpoints Contract
 | Endpoint | Method | Request Payload | Success Response | Error Response | Purpose |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | `/health` | `GET` | None | `200 OK` JSON (`status`, `redis`, `postgres`, `models`) | `503 Service Unavailable` | Subsystem liveness & readiness |
@@ -82,7 +166,7 @@ Both teams develop against strict contracts frozen in `TRD.md` and summarized be
 | `/v1/enroll` | `POST` | `{"speaker_id": str, "display_name": str, "audio_wav_base64": str}` | `201 Created` `{"speaker_id": str, "embedding_dim": 192, "enrolled_at": str}` | `400 Bad Request`, `422 Unprocessable` | Speaker voiceprint baseline enrollment |
 | `/v1/session/{session_id}/status` | `GET` | Path param `session_id` | `200 OK` `{"session_id": str, "threat_state": str, "risk_score": float, "frames_processed": int}` | `404 Not Found` | Active session state poll |
 
-### 2.2 WebSocket Streaming Contract
+### 3.2 WebSocket Streaming Contract
 * **URL**: `ws://localhost:8000/v1/stream/call/{session_id}?speaker_id={optional_speaker_id}`
 * **Inbound Audio Stream (Client $\rightarrow$ Server)**:
   * Binary Frames: Raw 16,000 Hz, 16-bit Mono, Little-Endian Signed Linear PCM (`Int16Array`).
@@ -122,107 +206,74 @@ Both teams develop against strict contracts frozen in `TRD.md` and summarized be
   }
   ```
 
-### 2.3 Contract Amendment Protocol
-If an unforeseen engineering constraint mandates an interface change:
-1. Update `TRD.md` with explicit version bump.
-2. Record architectural justification and diff in `MEMORY.md`.
-3. Notify the parallel track owner with exact payload modifications before code changes merge.
+### 3.3 Contract Amendment Protocol
+If an unforeseen implementation reality mandates an interface modification:
+1. Update `TRD.md` with explicit schema version bump.
+2. Record architectural justification and schema diff in `MEMORY.md`.
+3. Notify the parallel developer with exact payload modifications before code changes merge.
 
 ---
 
-## 3. Section A: Shared Foundation (A0–A4)
+## 4. Section A: Shared Foundation (A0–A4) [Joint Ownership]
 
-*All Section A phases are mandatory dependencies that must be satisfied before either track diverges.*
+*Prerequisite foundation owned jointly by Shub and Sion. Must be satisfied before tracks diverge.*
 
 ### Phase A0: Repository Baseline & Ground-Truth Verification
+* **Owner**: Joint (Shub & Sion).
 * **Objective**: Establish the factual baseline of running code, containers, and environment variables.
-* **Why It Matters**: Prevents building upon invalid assumptions regarding dependencies, models, or configurations.
 * **Dependencies**: None.
-* **Inputs**: Clean workspace clone.
-* **Outputs**: Confirmed container startup, verified test pass baseline, audit of missing files (`models/`).
-* **Files Likely to Change**: `backend/Dockerfile`, `frontend/Dockerfile`, `docker-compose.yml`.
-* **Files Likely to be Created**: None.
+* **Inputs**: Clean clone of `Voice-Cloning-Prototype`.
+* **Outputs**: Verified container startup, verified test pass baseline, audit of missing files (`models/`).
 * **Implementation Tasks**:
   1. `[VALIDATE]` Audit Docker Compose execution (`docker compose up --build`).
   2. `[VALIDATE]` Run existing backend pytest suite (`pytest backend/tests/`).
-  3. `[VALIDATE]` Verify frontend package dependencies and compilation (`npm run build`).
-  4. `[DOCUMENT]` Audit `models/` directory volume mount and confirm runtime fallbacks.
-* **Security Tasks**: Audit plain-text credentials in compose files; establish local `.env` strategy.
-* **Validation**: All containers boot healthy; test suite passes without unhandled exceptions.
+  3. `[VALIDATE]` Verify frontend compilation (`npm run build`).
 * **Definition of Done (DoD)**: Baseline status recorded in `MEMORY.md`; repo verified operational.
 * **Priority**: **P0** | **Effort**: LOW | **Blockers**: None.
-* **What Must NOT Be Done**: Do not write application features or refactor logic.
 
 ### Phase A1: Architecture & Specification Lock
+* **Owner**: Joint (Shub & Sion).
 * **Objective**: Lock technical, security, AI, and product requirements across all documentation.
-* **Why It Matters**: Eliminates architectural drift and conflicting assumptions between engineers.
 * **Dependencies**: Phase A0.
-* **Inputs**: Audit findings from Phase A0.
 * **Outputs**: Approved `PRD.md`, `TRD.md`, `SECURITY.md`, `AI_ARCHITECTURE.md`, `PHASES.md`, `MEMORY.md`.
-* **Files Likely to Change**: Documentation files only.
-* **Implementation Tasks**: Author and harmonize all specification documents to reflect exact repository capabilities.
-* **Validation**: All 6 architectural documents cross-referenced and free of contradictions.
 * **Definition of Done (DoD)**: Documentation locked and approved as technical baselines.
 * **Priority**: **P0** | **Effort**: MEDIUM | **Blockers**: None.
-* **What Must NOT Be Done**: Do not edit application source code.
 
 ### Phase A2: API Contract & WebSocket Contract Lock
+* **Owner**: Joint (Shub: Pydantic schemas; Sion: TypeScript types).
 * **Objective**: Formally define and lock all REST schemas, WebSocket frame formats, and telemetry payloads.
-* **Why It Matters**: Provides the immutable boundary allowing backend and frontend to build concurrently.
 * **Dependencies**: Phase A1.
-* **Inputs**: Section 2 of `PHASES.md` and `TRD.md` Section 5.
-* **Outputs**: Pydantic models in backend, TypeScript interfaces in frontend.
-* **Files Likely to Change**: `backend/main.py`, `frontend/store/useTelemetryStore.ts`.
-* **Files Likely to be Created**: `frontend/lib/types/telemetry.ts`.
-* **Implementation Tasks**:
-  1. `[BUILD]` Create frozen TypeScript types matching all backend request/response/telemetry schemas.
-  2. `[BUILD]` Align Pydantic schemas in `backend/main.py` with the frozen contract.
-* **Validation**: Typecheck passes on both Python (`mypy`/Pydantic validation) and TypeScript (`tsc --noEmit`).
+* **Outputs**: Pydantic models in `backend/main.py`, TypeScript interfaces in `frontend/lib/types/`.
 * **Definition of Done (DoD)**: Contract types published and imported in both frontend and backend trees.
 * **Priority**: **P0** | **Effort**: LOW | **Blockers**: None.
-* **What Must NOT Be Done**: Do not introduce ad-hoc fields without updating contracts.
 
 ### Phase A3: Shared Data Models & Threat State Schema
-* **Objective**: Standardize threat levels (GREEN, AMBER, RED), hysteresis limits, and audit schema.
-* **Why It Matters**: Ensures both sides interpret risk numbers identically without UI confusion.
+* **Owner**: Joint (Shub & Sion).
+* **Objective**: Standardize threat levels (GREEN, AMBER, RED), hysteresis limits, and decision enums.
 * **Dependencies**: Phase A2.
-* **Inputs**: `TRD.md` Section 9.
 * **Outputs**: Threat State enum, score ranges ($[0, 100]$), hysteresis thresholds ($<35$, $<70$).
-* **Files Likely to Change**: `backend/main.py`, `frontend/store/useTelemetryStore.ts`.
-* **Implementation Tasks**:
-  1. `[BUILD]` Define `ThreatLevel` enum (`GREEN`, `AMBER`, `RED`) in backend and frontend.
-  2. `[BUILD]` Synchronize transaction evaluation decision schema (`APPROVED`, `BLOCKED`, `STEP_UP_REQUIRED`).
-* **Validation**: Unit tests verifying state mapping on both sides.
 * **Definition of Done (DoD)**: Threat state logic synchronized between backend and client store.
 * **Priority**: **P0** | **Effort**: LOW | **Blockers**: None.
-* **What Must NOT Be Done**: Do not alter threshold boundaries without documentation update.
 
 ### Phase A4: Development Environment & Configuration Contract
-* **Objective**: Standardize environment variables, port bindings, and development mocks.
-* **Why It Matters**: Ensures seamless local developer execution across Windows, Linux, and Docker.
+* **Owner**: Joint (Shub & Sion).
+* **Objective**: Standardize environment variables, port bindings, and development defaults.
 * **Dependencies**: Phase A0.
-* **Inputs**: `docker-compose.yml`, `.env.example`.
-* **Outputs**: Functional `.env.example` with documented defaults (ports 8000, 3000, 6379, 5432).
-* **Files Likely to Change**: `docker-compose.yml`, `.env.example`.
-* **Implementation Tasks**: Create `.env.example` reflecting all verified backend and frontend environment keys.
-* **Validation**: Clean startup on bare metal and Docker using environment defaults.
-* **Definition of Done (DoD)**: Both developers can start their respective stacks with zero configuration friction.
+* **Outputs**: Functional `.env.example` reflecting backend and frontend defaults (ports 8000, 3000, 6379, 5432).
+* **Definition of Done (DoD)**: Both developers can launch independent local stacks with zero config conflict.
 * **Priority**: **P0** | **Effort**: LOW | **Blockers**: None.
-* **What Must NOT Be Done**: Never commit production secrets or actual passwords to repo.
 
 ---
 
-## 4. Section B: Backend / AI Track (B1–B20)
+## 5. Section B: Backend / AI Track (B1–B20) [Owner: Person A — Shub]
 
-*Primary immediate development track. Transforms the backend from mock inference to real DSP, quantized ONNX models, and deterministic transaction interventions.*
+*Primary immediate development track owned entirely by Shub. Unchanged from verified implementation plan.*
 
 ### Phase B1: Backend Baseline & FastAPI Modularization
 * **Objective**: Establish a clean backend structure, verifying settings, logging, and error handlers.
-* **Why It Matters**: Eliminates monolithic fragility before streaming and neural components are integrated.
 * **Dependencies**: Section A (A0–A4).
 * **Inputs**: `backend/main.py`, `backend/requirements.txt`.
 * **Outputs**: Clean ASGI app with configured CORS, structlog, and settings management.
-* **Files Likely to Change**: `backend/main.py`.
 * **Implementation Tasks**:
   1. `[REFACTOR]` Verify Pydantic `Settings` class loads environment variables with graceful defaults.
   2. `[BUILD]` Configure structured JSON logging via `structlog` with correlation session IDs.
@@ -235,7 +286,6 @@ If an unforeseen engineering constraint mandates an interface change:
 
 ### Phase B2: Audio Ingestion & WebSocket Streaming Stability
 * **Objective**: Ensure rock-solid, zero-leak streaming ingestion of 16kHz 16-bit PCM via WebSockets.
-* **Why It Matters**: All downstream AI detection fails if audio frames drop or transport crashes under load.
 * **Dependencies**: Phase B1.
 * **Inputs**: WebSocket connection at `/v1/stream/call/{session_id}`.
 * **Outputs**: Binary frame receiver unpacking 1,024-sample chunks ($64\text{ ms}$) into memory.
@@ -253,7 +303,6 @@ If an unforeseen engineering constraint mandates an interface change:
 
 ### Phase B3: Audio Buffering & Preprocessing (Redis Ring Buffer)
 * **Objective**: Maintain a 24-frame sliding window ($\approx 1,536\text{ ms}$) with a 12-frame hop cadence ($768\text{ ms}$).
-* **Why It Matters**: AI models require temporal context (1.5s) to accurately evaluate vocoder artifacts and pitch.
 * **Dependencies**: Phase B2, Redis.
 * **Inputs**: 64ms PCM chunks from WebSocket.
 * **Outputs**: Assembled 24,576-sample float32 NumPy arrays ready for DSP extraction.
@@ -270,7 +319,6 @@ If an unforeseen engineering constraint mandates an interface change:
 
 ### Phase B4: Voice Activity Detection (Silero VAD)
 * **Objective**: Strip silence and unvoiced noise, discarding windows with $<15\%$ speech activity.
-* **Why It Matters**: Prevents wasting expensive neural inference on background room noise and prevents score skew.
 * **Dependencies**: Phase B3.
 * **Inputs**: 24-frame audio array ($1.536\text{ s}$).
 * **Outputs**: Speech probability ($[0.0, 1.0]$) and boolean gate flag (`is_speech`).
@@ -288,7 +336,6 @@ If an unforeseen engineering constraint mandates an interface change:
 
 ### Phase B5: Acoustic / Spectral Analysis (80-bin Log-Mel Spectrogram)
 * **Objective**: Extract high-resolution 80-bin log-mel filterbank spectrograms on active audio windows.
-* **Why It Matters**: Provides spectral feature matrices required for ResNet anti-spoofing and UI waterfall rendering.
 * **Dependencies**: Phase B4.
 * **Inputs**: Active speech audio window ($24,576$ samples).
 * **Outputs**: 80-bin log-mel array $[80 \times T]$ and normalized 80-float slice for UI telemetry.
@@ -304,7 +351,6 @@ If an unforeseen engineering constraint mandates an interface change:
 
 ### Phase B6: Prosody & Biomechanical Voice Analysis (Praat Parselmouth)
 * **Objective**: Extract vocal cord physical parameters: fundamental frequency ($F_0$), jitter, shimmer, and HNR.
-* **Why It Matters**: Biological human glottal mechanics cannot be perfectly faked by zero-shot neural vocoders.
 * **Dependencies**: Phase B4.
 * **Inputs**: Audio window float32 array.
 * **Outputs**: $F_0$ mean, $F_0$ variance, jitter (RAP), shimmer (APQ5), HNR (dB), and prosody risk score.
@@ -323,7 +369,6 @@ If an unforeseen engineering constraint mandates an interface change:
 
 ### Phase B7: Anti-Spoofing Neural Model Inference (ResNet-18 Quantized)
 * **Objective**: Run quantized ResNet-18 ONNX model over log-mel spectrogram to detect vocoder artifacts.
-* **Why It Matters**: Detects transposed convolution checkerboard artifacts and phase smearing characteristic of neural TTS.
 * **Dependencies**: Phase B5.
 * **Inputs**: 80-bin log-mel spectrogram tensor.
 * **Outputs**: Acoustic anti-spoof risk score ($0.0–100.0$).
@@ -341,7 +386,6 @@ If an unforeseen engineering constraint mandates an interface change:
 
 ### Phase B8: Speaker Representation & Voiceprint Analysis (ECAPA-TDNN)
 * **Objective**: Extract 192-dimensional speaker embeddings and compare against PostgreSQL `pgvector` baseline.
-* **Why It Matters**: Prevents identity impersonation even if a synthetic clone produces clean acoustic prosody.
 * **Dependencies**: Phase B4, Phase B15.
 * **Inputs**: Audio window; pre-enrolled speaker ID.
 * **Outputs**: 192-dim unit vector; cosine similarity score ($[-1.0, 1.0]$); speaker anomaly risk.
@@ -359,7 +403,6 @@ If an unforeseen engineering constraint mandates an interface change:
 
 ### Phase B9: Multi-Signal Feature Fusion
 * **Objective**: Fuse acoustic, prosodic, speaker, and conversational signals into a raw composite risk score.
-* **Why It Matters**: Single indicators produce false positives; multi-signal fusion delivers robust decisions.
 * **Dependencies**: Phase B5, Phase B6, Phase B7, Phase B8.
 * **Inputs**: $S_{\text{acoustic}}$, $S_{\text{prosody}}$, $S_{\text{speaker}}$, $S_{\text{challenge}}$.
 * **Outputs**: Raw instantaneous risk score $R_{\text{raw}} \in [0.0, 100.0]$.
@@ -376,11 +419,9 @@ If an unforeseen engineering constraint mandates an interface change:
 
 ### Phase B10: Risk Scoring Engine & Calibration
 * **Objective**: Calibrate raw risk scores against known bonafide and spoof distributions.
-* **Why It Matters**: Prevents false alarms on energetic speech and ensures reliable threat escalation.
 * **Dependencies**: Phase B9.
 * **Inputs**: Raw fused scores from test audio.
 * **Outputs**: Calibrated score with confidence intervals.
-* **Files Likely to Change**: `backend/main.py`.
 * **Implementation Tasks**:
   1. `[BUILD]` Implement sigmoid score calibration mapping raw distance metrics to probabilistic risk.
   2. `[BUILD]` Add signal quality penalty: elevate uncertainty if SNR $<12\text{ dB}$.
@@ -391,11 +432,9 @@ If an unforeseen engineering constraint mandates an interface change:
 
 ### Phase B11: Temporal Smoothing & Threat State Machine
 * **Objective**: Apply asymmetric EMA smoothing and enforce threat state transitions with hysteresis.
-* **Why It Matters**: Prevents rapid flickering between GREEN and RED while reacting instantly ($<2\text{ s}$) to attacks.
 * **Dependencies**: Phase B10.
 * **Inputs**: Instantaneous risk scores $R_{\text{raw}}$.
 * **Outputs**: Smoothed risk $R_{\text{EMA}}$ and `ThreatLevel` (`GREEN`, `AMBER`, `RED`).
-* **Files Likely to Change**: `backend/main.py`.
 * **Implementation Tasks**:
   1. `[BUILD]` Implement Asymmetric EMA in `ThreatState`:
      $$\alpha = 0.65 \text{ if } R_{\text{raw}} > R_{\text{prev}} \text{ else } 0.25$$
@@ -410,11 +449,9 @@ If an unforeseen engineering constraint mandates an interface change:
 
 ### Phase B12: PITCH Challenge-Response Engine
 * **Objective**: Implement active conversational verification: prompt generation, latency check, and pitch modulation.
-* **Why It Matters**: Neural voice converters introduce $>2.5\text{ s}$ delay and fail on phonetic tongue-twisters.
 * **Dependencies**: Phase B6, Phase B11.
 * **Inputs**: AMBER threat state trigger; challenge response audio stream.
 * **Outputs**: Challenge evaluation result (`PASS`, `FAIL`, `TIMEOUT`).
-* **Files Likely to Change**: `backend/main.py`.
 * **Implementation Tasks**:
   1. `[BUILD]` Dynamic phrase generator selecting randomized Hindi/English phonetic stress phrases.
   2. `[BUILD]` Measure response latency: flag conversion lag if response begins $>2.5\text{ s}$ post-prompt.
@@ -426,12 +463,10 @@ If an unforeseen engineering constraint mandates an interface change:
 
 ### Phase B13: Pre-Transaction Authorization Gate & Circuit Breaker
 * **Objective**: Implement the synchronous REST endpoint halting fraudulent money transfers before funds release.
-* **Why It Matters**: This is the core operational deliverable that stops financial theft in real time.
 * **Dependencies**: Phase B11.
 * **Inputs**: `POST /v1/transaction/evaluate-authorization` request payload.
 * **Outputs**: Deterministic HTTP 200 (APPROVED) or HTTP 403 (BLOCKED) with audit persistence.
-* **Files Likely to Change**: `backend/main.py`, `backend/database.sql`.
-* **Files Likely to be Created**: `backend/tests/test_transaction_gate.py`.
+* **Files Likely to Create**: `backend/tests/test_transaction_gate.py`.
 * **Implementation Tasks**:
   1. `[BUILD]` Implement `POST /v1/transaction/evaluate-authorization` with strict Pydantic validation.
   2. `[BUILD]` Lookup active session threat level:
@@ -447,11 +482,9 @@ If an unforeseen engineering constraint mandates an interface change:
 
 ### Phase B14: Redis In-Memory Ring Buffer & TTL Hardening
 * **Objective**: Harden Redis operations for ultra-low latency audio buffering and strict DPDP ephemeral retention.
-* **Why It Matters**: Guarantees zero memory leaks and guarantees compliance with privacy regulations.
 * **Dependencies**: Phase B2, Phase B3.
 * **Inputs**: Redis 7.2 container.
 * **Outputs**: Hardened async Redis client pool with connection recycling and error handling.
-* **Files Likely to Change**: `backend/main.py`.
 * **Implementation Tasks**:
   1. `[BUILD]` Implement connection pooling via `redis.asyncio.ConnectionPool`.
   2. `[SECURITY]` Audit all Redis keys: enforce explicit 15-second TTL on all audio buffers.
@@ -463,11 +496,9 @@ If an unforeseen engineering constraint mandates an interface change:
 
 ### Phase B15: PostgreSQL & pgvector Integration
 * **Objective**: Store relational session audit logs and 192-dimensional vector embeddings with IVFFlat indexing.
-* **Why It Matters**: Provides permanent forensic auditability and high-speed speaker similarity search.
 * **Dependencies**: Phase B1, Phase B8.
 * **Inputs**: `backend/database.sql`, PostgreSQL 16 container.
 * **Outputs**: Initialized schema with `sessions`, `enrolled_voiceprints`, and `transaction_evaluations` tables.
-* **Files Likely to Change**: `backend/main.py`, `backend/database.sql`.
 * **Implementation Tasks**:
   1. `[DATABASE]` Verify `CREATE EXTENSION IF NOT EXISTS vector;` executes cleanly on startup.
   2. `[DATABASE]` Create tables with foreign key constraints, indexes, and vector cosine distance index.
@@ -480,11 +511,9 @@ If an unforeseen engineering constraint mandates an interface change:
 
 ### Phase B16: API Hardening, Authentication & Rate Limiting
 * **Objective**: Secure REST and WebSocket endpoints against unauthorized access, replay, and abuse.
-* **Why It Matters**: The security platform must not become an attack vector for bad actors.
 * **Dependencies**: Phase B1, Phase B13.
 * **Inputs**: Incoming HTTP/WS requests.
 * **Outputs**: Authenticated requests with rate limiting and payload validation.
-* **Files Likely to Change**: `backend/main.py`.
 * **Implementation Tasks**:
   1. `[SECURITY]` Add API key header validation (`X-API-Key`) on transaction evaluation endpoint.
   2. `[SECURITY]` Enforce rate limiting on WebSocket connections (max 5 connections per client IP).
@@ -496,11 +525,9 @@ If an unforeseen engineering constraint mandates an interface change:
 
 ### Phase B17: Observability, Structured Logging & Latency Tracing
 * **Objective**: Instrument pipeline stages with sub-millisecond latency timing and structured audit logging.
-* **Why It Matters**: Required to prove SLA targets ($<80\text{ ms}$ Tier 1, $<35\text{ ms}$ Gate) to technical judges.
 * **Dependencies**: Phase B1 through B13.
 * **Inputs**: Execution checkpoints across audio ingestion, DSP, ONNX, and gating.
 * **Outputs**: Structured log events with latency breakdowns emitted on every hop.
-* **Files Likely to Change**: `backend/main.py`.
 * **Implementation Tasks**:
   1. `[BUILD]` Instrument pipeline stages using `time.perf_counter()`.
   2. `[BUILD]` Log JSON events containing: `vad_ms`, `spectral_ms`, `prosody_ms`, `resnet_ms`, `total_ms`.
@@ -512,11 +539,9 @@ If an unforeseen engineering constraint mandates an interface change:
 
 ### Phase B18: Backend Security Hardening & Zero-Storage Audit
 * **Objective**: Audit the entire backend stack to guarantee zero raw audio persistence on host storage.
-* **Why It Matters**: Proves compliance with DPDP Act 2023 and enterprise security baselines.
 * **Dependencies**: Phase B14, Phase B15.
 * **Inputs**: Running backend stack under active streaming.
 * **Outputs**: Clean security audit report confirming zero disk artifacts.
-* **Files Likely to Change**: `backend/main.py`, `docker-compose.yml`.
 * **Implementation Tasks**:
   1. `[SECURITY]` Scan backend container filesystem during streaming; confirm no `.wav` or `.raw` temp files.
   2. `[SECURITY]` Verify non-root container execution (`USER appuser` in Dockerfile).
@@ -528,7 +553,6 @@ If an unforeseen engineering constraint mandates an interface change:
 
 ### Phase B19: Backend Performance Validation & Benchmarking
 * **Objective**: Execute load tests on WebSocket streaming and measure p95/p99 latency distributions.
-* **Why It Matters**: Validates that the backend sustains real-time performance without frame accumulation.
 * **Dependencies**: Phase B17.
 * **Inputs**: Automated streaming load generator script.
 * **Outputs**: Performance benchmark report with empirical latency numbers.
@@ -544,7 +568,6 @@ If an unforeseen engineering constraint mandates an interface change:
 
 ### Phase B20: Backend Demo Readiness & Standalone Validation
 * **Objective**: Validate the complete standalone backend against synthetic attack scenarios.
-* **Why It Matters**: Guarantees backend readiness before integrating with the parallel frontend track.
 * **Dependencies**: Phase B1 through B19.
 * **Inputs**: Test WAV audio files (bonafide human speech and synthetic voice conversion attack).
 * **Outputs**: End-to-end verified backend ready for Section D integration.
@@ -560,21 +583,17 @@ If an unforeseen engineering constraint mandates an interface change:
 
 ---
 
-## 5. Section C: Frontend Track (C1–C17)
+## 6. Section C: Frontend Track (C1–C17) [Owner: Person B — Sion]
 
-*Parallel UI development track owned by frontend engineer. Builds the SecOps War Room dashboard, visualizers, and interactive banking gate using frozen contracts and mock data.*
+*Secondary parallel UI track owned entirely by Sion. Enhanced with design specification workflow and mock-first independence.*
 
 ### Phase C1: Frontend Foundation & Type System Setup
-* **Objective**: Configure frontend environment, strict TypeScript compiler settings, and contract type definitions.
-* **Why It Matters**: Establishes type safety across all components and prevents integration regressions.
+* **Objective**: Configure frontend environment, strict TypeScript settings, and contract type definitions.
 * **Dependencies**: Section A (A0–A4).
-* **Inputs**: `package.json`, `tsconfig.json`, `TRD.md` Section 5.
-* **Outputs**: Verified build environment; imported telemetry and API contract types.
-* **Files Likely to Change**: `frontend/package.json`.
-* **Files Likely to be Created**: `frontend/lib/types/telemetry.ts`, `frontend/lib/types/contracts.ts`.
+* **Outputs**: Verified build environment; imported telemetry and API contract types in `frontend/lib/types/`.
 * **UI Deliverables**: None (foundation).
 * **Data Contract**: TypeScript interfaces matching WebSocket telemetry and REST payloads.
-* **Mock Data Requirements**: Initial mock telemetry objects for storybook/component testing.
+* **Mock Data Requirements**: Initial mock telemetry objects for component testing.
 * **Backend Dependency**: None (contract-driven).
 * **Validation Criteria**: `npm run build` and `npm run lint` execute with zero errors.
 * **Definition of Done (DoD)**: Contract types in place; clean Next.js build.
@@ -582,26 +601,22 @@ If an unforeseen engineering constraint mandates an interface change:
 
 ### Phase C2: Application Shell, Theme & Navigation
 * **Objective**: Build the cybernetic dark-theme layout, header status indicators, and view switcher.
-* **Why It Matters**: Gives judges an immediate premium first impression of a high-tech security operations console.
 * **Dependencies**: Phase C1.
-* **Inputs**: `frontend/app/layout.tsx`, `frontend/app/globals.css`.
 * **Outputs**: Responsive application frame with top navigation bar (`LimelightNavbar.tsx`).
-* **Components**: `frontend/components/navigation/LimelightNavbar.tsx`, `frontend/app/layout.tsx`.
+* **Design Inputs**: Base dark background `#0a0b0e`, neon cybernetic accents (emerald/cyan/crimson).
 * **UI Deliverables**: Top navbar with live time, system status pulse, and view navigation tabs.
 * **Mock Data Requirements**: Static mock session ID and system health flag.
 * **Backend Dependency**: None.
-* **Validation Criteria**: Responsive shell renders cleanly at 1920x1080 and 1366x768 viewports.
-* **Definition of Done (DoD)**: Application layout styled with cybernetic dark aesthetic.
+* **Validation Criteria**: Shell renders cleanly at 1920x1080 and 1366x768 viewports without layout shifts.
+* **Definition of Done (DoD)**: Application layout styled with cybernetic aesthetic.
 * **Priority**: **P0** | **Effort**: LOW | **Blockers**: None.
 
 ### Phase C3: Voice Session Control & Mode Switcher
 * **Objective**: Implement interactive session controls: Start/Stop Call, Mute, and Mode Toggle (Live Mic vs. Simulated Attack).
-* **Why It Matters**: Enables the presenter to smoothly switch between normal conversation and attack scenarios.
 * **Dependencies**: Phase C2.
 * **Outputs**: Session control toolbar with active call timer and status badge.
 * **Components**: `frontend/components/views/OverviewView.tsx`.
 * **UI Deliverables**: Start/Stop button, Live Mic toggle, Simulated Attack radio group.
-* **Mock Data Requirements**: Simulated session timer and toggle state hooks.
 * **Backend Dependency**: None.
 * **Validation Criteria**: Clicking Start initiates session state; Mode Toggle switches data stream cleanly.
 * **Definition of Done (DoD)**: Session controls responsive and managing client-side session state.
@@ -609,7 +624,6 @@ If an unforeseen engineering constraint mandates an interface change:
 
 ### Phase C4: Live Audio Telemetry UI & Metric Cards
 * **Objective**: Build real-time metric cards displaying VAD speech ratio, latency, frame rate, and analysis hop count.
-* **Why It Matters**: Demonstrates continuous processing and transparency into signal health.
 * **Dependencies**: Phase C2.
 * **Outputs**: Grid of glowing telemetry stat cards with micro-animations.
 * **Components**: `frontend/components/TelemetryStatCards.tsx`.
@@ -623,11 +637,10 @@ If an unforeseen engineering constraint mandates an interface change:
 
 ### Phase C5: Spectrogram & Acoustic Waterfall Canvas
 * **Objective**: Implement 60 FPS HTML5 Canvas rendering 80-bin log-mel spectrogram waterfall with high-contrast palette.
-* **Why It Matters**: Visual centerpiece of the demo; visually proves that audio frequency characteristics are being analyzed.
 * **Dependencies**: Phase C2.
 * **Outputs**: Smooth horizontal waterfall scrolling from right to left as audio frames arrive.
 * **Components**: `frontend/components/SpectrogramCanvas.tsx`.
-* **UI Deliverables**: Responsive canvas component rendering 80 mel frequency bins.
+* **Design Inputs**: High-contrast spectral color gradient (deep violet $\rightarrow$ electric cyan $\rightarrow$ solar yellow).
 * **Data Contract**: `pushSpectrogramColumn(column: number[])` in store.
 * **Mock Data Requirements**: Simulated 80-bin frequency column generator in `useSimulator.ts`.
 * **Backend Dependency**: None.
@@ -637,7 +650,6 @@ If an unforeseen engineering constraint mandates an interface change:
 
 ### Phase C6: Prosody & Biomechanical Telemetry Visualizer
 * **Objective**: Render real-time time-series charts for Fundamental Frequency ($F_0$), Jitter, and Shimmer.
-* **Why It Matters**: Visually demonstrates how human pitch varies naturally while synthetic clones flatten out.
 * **Dependencies**: Phase C2.
 * **Outputs**: Multi-line chart updating smoothly with historical prosody metrics over the last 30 seconds.
 * **Components**: `frontend/components/ProsodyChart.tsx`.
@@ -651,7 +663,6 @@ If an unforeseen engineering constraint mandates an interface change:
 
 ### Phase C7: Composite Risk Score & Threat Dial Gauge
 * **Objective**: Build animated radial gauge (`ThreatDial.tsx`) displaying composite risk ($0.0–100.0$) with color glow.
-* **Why It Matters**: Primary visual indicator that judges watch during live attack injection.
 * **Dependencies**: Phase C2.
 * **Outputs**: Animated dial with color gradient (Green $\rightarrow$ Amber $\rightarrow$ Red) and numeric risk readout.
 * **Components**: `frontend/components/ThreatDial.tsx`.
@@ -665,13 +676,11 @@ If an unforeseen engineering constraint mandates an interface change:
 
 ### Phase C8: Threat State Machine UI (GREEN / AMBER / RED)
 * **Objective**: Render prominent visual threat state badges, pulsing glow borders, and audio warning alerts.
-* **Why It Matters**: Eliminates ambiguity during demo; judges instantly know when system enters dangerous state.
 * **Dependencies**: Phase C7.
 * **Outputs**: Screen-edge glow and state banner switching between GREEN (Secured), AMBER (Caution), RED (Breach).
 * **Components**: `frontend/components/ThreatStateBanner.tsx`.
 * **UI Deliverables**: Header badge, alert banners, and screen perimeter glow reactive to threat level.
 * **Data Contract**: `threat_level` string enum from store.
-* **Mock Data Requirements**: State trigger events in `useSimulator.ts`.
 * **Backend Dependency**: None.
 * **Validation Criteria**: State transitions reflect hysteresis rules; RED state triggers high-visibility warning.
 * **Definition of Done (DoD)**: Threat states visually dominate UI when risk escalates.
@@ -679,11 +688,10 @@ If an unforeseen engineering constraint mandates an interface change:
 
 ### Phase C9: PITCH Challenge-Response Interactive Drawer
 * **Objective**: Build sliding challenge drawer displaying dynamic Hindi tongue-twisters and audio feedback meter.
-* **Why It Matters**: Interactive showcase of active defense; presenter reads the phrase on stage.
 * **Dependencies**: Phase C8.
 * **Outputs**: Expandable drawer showing Hindi/English challenge phrases with countdown timer.
 * **Components**: `frontend/components/PitchChallengeDrawer.tsx`.
-* **UI Deliverables**: Animated drawer, bold Devanagari text display, vocal stability bar, Pass/Fail stamp.
+* **Design Inputs**: Bold Devanagari typography, glowing countdown ring, high-contrast vocal stability bar.
 * **Data Contract**: `challenge_active`, `challenge_phrase`, `challenge_status` in store.
 * **Mock Data Requirements**: Mock challenge trigger event in simulator.
 * **Backend Dependency**: None.
@@ -693,7 +701,6 @@ If an unforeseen engineering constraint mandates an interface change:
 
 ### Phase C10: Interactive Mock Banking Gate UI
 * **Objective**: Build simulated mobile UPI wire transfer interface with interactive PIN pad and automatic circuit lock.
-* **Why It Matters**: Closes the loop from AI detection to financial loss prevention; the ultimate demo punchline.
 * **Dependencies**: Phase C8.
 * **Outputs**: Realistic smartphone frame rendering UPI payment flow (₹25,000 vs. ₹2,50,000) with PIN modal.
 * **Components**: `frontend/components/MockBankingGate.tsx`.
@@ -707,13 +714,11 @@ If an unforeseen engineering constraint mandates an interface change:
 
 ### Phase C11: Security Alerts & Forensic Evidence Drawer
 * **Objective**: Build expandable event feed showing forensic explanations ("Transposed convolution artifact detected").
-* **Why It Matters**: Provides explainability; answers the judges' question: *"Why did the AI flag this voice?"*
 * **Dependencies**: Phase C4.
 * **Outputs**: Chronological security event log with severity badges and expandable anomaly details.
 * **Components**: `frontend/components/SecurityEventLog.tsx`.
 * **UI Deliverables**: Scrolling event ledger with timestamps, risk tags, and acoustic anomaly descriptions.
 * **Data Contract**: Array of `SecurityEvent` from store.
-* **Mock Data Requirements**: Mock anomaly events in `useSimulator.ts`.
 * **Backend Dependency**: None.
 * **Validation Criteria**: New security anomalies append to log with smooth slide-down animation.
 * **Definition of Done (DoD)**: Forensic evidence log operational with realistic explanations.
@@ -721,13 +726,11 @@ If an unforeseen engineering constraint mandates an interface change:
 
 ### Phase C12: Session History & Audit Visualization View
 * **Objective**: Build secondary view tab showing previous session evaluation records and transaction outcomes.
-* **Why It Matters**: Shows enterprise readiness and compliance audit trail capabilities.
 * **Dependencies**: Phase C2.
 * **Outputs**: Tabular audit ledger view with search, filter, and session detail modal.
 * **Components**: `frontend/components/views/SessionHistoryView.tsx`.
 * **UI Deliverables**: Data table with status pills, timestamps, risk scores, and transaction amounts.
 * **Data Contract**: Schema matching `transaction_evaluations` database table.
-* **Mock Data Requirements**: Array of 10 mock historical transactions.
 * **Backend Dependency**: None.
 * **Validation Criteria**: Switching to History view displays populated audit table.
 * **Definition of Done (DoD)**: Historical audit view styled and functional.
@@ -735,11 +738,9 @@ If an unforeseen engineering constraint mandates an interface change:
 
 ### Phase C13: API Client Integration Layer
 * **Objective**: Build typed API service client for `/health`, `/v1/transaction/evaluate-authorization`, and `/v1/enroll`.
-* **Why It Matters**: Encapsulates network calls, timeout handling, and error transformation.
 * **Dependencies**: Phase C1.
-* **Outputs**: TypeScript API client module with typed request/response methods.
-* **Files Likely to Create**: `frontend/lib/api/client.ts`.
-* **Data Contract**: Locked REST contract from Section 2.
+* **Outputs**: TypeScript API client module (`frontend/lib/api/client.ts`) with typed request/response methods.
+* **Data Contract**: Locked REST contract from Section 3.
 * **Mock Data Requirements**: Mock interceptor mode when backend is unreachable.
 * **Backend Dependency**: None (can run against mock server).
 * **Validation Criteria**: Unit tests verifying request payload serialization and error code parsing.
@@ -748,12 +749,10 @@ If an unforeseen engineering constraint mandates an interface change:
 
 ### Phase C14: WebSocket Client Integration & Audio Capture Hook
 * **Objective**: Implement `useAudioStreamer.ts` (Web Audio mic capture at 16kHz PCM) and `useVaaniShieldWs.ts`.
-* **Why It Matters**: Captures microphone audio in browser and streams binary PCM chunks to backend.
 * **Dependencies**: Phase C1.
 * **Outputs**: Fully functional audio capture and WebSocket streaming hook.
 * **Components**: `frontend/hooks/useAudioStreamer.ts`, `frontend/hooks/useVaaniShieldWs.ts`.
 * **Data Contract**: 1,024-sample `Int16Array` binary chunks; handles inbound `TELEMETRY_UPDATE` JSON.
-* **Mock Data Requirements**: Loopback audio buffer for offline testing.
 * **Backend Dependency**: None.
 * **Validation Criteria**: Browser microphone captures 16kHz audio; chunks dispatches over WebSocket client.
 * **Definition of Done (DoD)**: Audio streamer and WebSocket hook tested and handling reconnection.
@@ -761,7 +760,6 @@ If an unforeseen engineering constraint mandates an interface change:
 
 ### Phase C15: Error Boundaries, Offline Modes & Reconnection States
 * **Objective**: Implement graceful error boundaries, WebSocket disconnect banners, and fallback toggles.
-* **Why It Matters**: Prevents blank-screen crashes during demo if a network glitch occurs.
 * **Dependencies**: Phase C2, Phase C14.
 * **Outputs**: Toast alerts, reconnecting spinner, and automatic fallback to simulator mode.
 * **Components**: `frontend/components/ConnectionBanner.tsx`.
@@ -770,20 +768,22 @@ If an unforeseen engineering constraint mandates an interface change:
 * **Definition of Done (DoD)**: Frontend resilient to backend disconnects and rendering exceptions.
 * **Priority**: **P1** | **Effort**: LOW | **Blockers**: None.
 
-### Phase C16: Responsive Styling, Accessibility & Cybernetic Polish
-* **Objective**: Polish UI contrast, typography, glassmorphism borders, and mobile viewport adaptability.
-* **Why It Matters**: Ensures the application looks gorgeous on high-resolution projector screens during evaluation.
+### Phase C16: Responsive Styling, Accessibility & Cybernetic Polish [Shub Design Directives]
+* **Objective**: Apply Shub's authoritative design specifications (typography, color codes, glassmorphism, spacing).
 * **Dependencies**: Phase C2 through C12.
-* **Outputs**: Polished CSS tokens, subtle glowing accents, and crisp typography.
-* **Files Likely to Change**: `frontend/app/globals.css`, component styles.
-* **UI Deliverables**: Polished cybernetic theme with deep black backgrounds (`#0a0b0e`) and emerald/crimson accents.
-* **Validation Criteria**: Visual audit across Chrome, Firefox, and Edge at multiple zoom levels.
+* **Inputs**: Design specifications, reference URLs, and component styling notes provided by Shub.
+* **Outputs**: Polished CSS tokens, subtle glowing accents, crisp typography, and mobile-ready viewport rules.
+* **Design Scope**:
+  * Fine-tuning card borders (`border-white/10` with subtle emerald/crimson backlight).
+  * Aligning typography hierarchies (Outfit headers, JetBrains Mono telemetry numbers).
+  * Polishing Framer Motion spring physics for ThreatDial needle and modal transitions.
+  * Ensuring zero visual regressions across Chrome, Firefox, and Edge.
+* **Validation Criteria**: Visual review passes all design constraints provided by Shub.
 * **Definition of Done (DoD)**: UI aesthetics polished to hackathon-winning presentation standards.
 * **Priority**: **P1** | **Effort**: LOW | **Blockers**: None.
 
 ### Phase C17: Frontend Demo Readiness & Standalone Rehearsal
 * **Objective**: Verify that the complete frontend functions flawlessly in standalone mode with simulated data.
-* **Why It Matters**: Guarantees a bulletproof presentation fallback even if local Docker networking fails.
 * **Dependencies**: Phase C1 through C16.
 * **Outputs**: 100% functional standalone frontend running on `localhost:3000`.
 * **Validation Criteria**: Presenter can execute the entire 5-minute demo script using simulated attack triggers.
@@ -792,324 +792,228 @@ If an unforeseen engineering constraint mandates an interface change:
 
 ---
 
-## 6. Section D: Integration Track (D1–D10)
+## 7. Section D: Integration Track (D1–D10) [Joint Ownership]
 
-*Dedicated convergence track executed once both Backend and Frontend tracks achieve readiness. Connects live audio streaming, real neural inference, and real transaction circuit breaking.*
+*Joint convergence track executed collaboratively once Shub certifies `B20` and Sion certifies `C17`.*
 
-### Phase D1: Backend API ↔ Frontend API Client Integration
-* **Backend Dependency**: Phase B1, B13 (`GET /health`, `POST /v1/transaction/evaluate-authorization`).
-* **Frontend Dependency**: Phase C13 (`lib/api/client.ts`).
-* **Integration Contract**: REST JSON endpoints defined in Section 2.1.
-* **Expected Behavior**: Frontend queries real backend API; backend responds with valid HTTP status and JSON payloads.
-* **Validation Criteria**: Frontend health pill turns green; transaction gate requests receive real backend responses.
-* **Failure Scenarios**: Backend down (frontend shows offline banner); CORS rejected (verify origin header).
-* **Definition of Done (DoD)**: REST communication verified end-to-end between Next.js client and FastAPI server.
-* **Priority**: **P0** | **Effort**: LOW.
-
-### Phase D2: Backend WebSocket ↔ Frontend Telemetry Store Integration
-* **Backend Dependency**: Phase B2, B11 (WebSocket `/v1/stream/call/{session_id}`).
-* **Frontend Dependency**: Phase C14 (`useVaaniShieldWs.ts`), Phase C1 (`useTelemetryStore.ts`).
-* **Integration Contract**: Full-duplex WebSocket streaming contract from Section 2.2.
-* **Expected Behavior**: Backend emits `TELEMETRY_UPDATE` events; frontend store ingests and updates state.
-* **Validation Criteria**: Telemetry metric cards (Phase C4) reflect real backend packet indices and timestamps.
-* **Failure Scenarios**: Frame format mismatch (verify 16-bit PCM endianness); socket disconnect (verify auto-reconnect).
-* **Definition of Done (DoD)**: Live telemetry streaming smoothly from backend to frontend store at 1.3 Hz.
-* **Priority**: **P0** | **Effort**: MEDIUM.
-
-### Phase D3: Real Audio Stream Ingestion & Preprocessing Integration
-* **Backend Dependency**: Phase B2, B3 (Sliding ring buffer, 24-frame accumulator).
-* **Frontend Dependency**: Phase C14 (`useAudioStreamer.ts` Web Audio microphone capture).
-* **Integration Contract**: Binary PCM 1,024-sample chunks ($2,048\text{ bytes}$).
-* **Expected Behavior**: Presenter speaks into browser microphone; backend receives and buffers real PCM chunks.
-* **Validation Criteria**: Backend logs confirm receipt of consecutive audio chunks; Redis buffer length reaches 24.
-* **Failure Scenarios**: Browser mic permissions denied (show prompt); audio clipping (verify float normalization).
-* **Definition of Done (DoD)**: Real human speech streamed from browser microphone and buffered in backend.
-* **Priority**: **P0** | **Effort**: MEDIUM.
-
-### Phase D4: Real AI Risk Score & Visualizer Synchronization
-* **Backend Dependency**: Phase B5, B6, B7, B11 (Real mel spectrogram, Parselmouth prosody, ResNet-18).
-* **Frontend Dependency**: Phase C5 (Spectrogram Canvas), Phase C6 (Prosody Chart), Phase C7 (ThreatDial).
-* **Integration Contract**: Real 80-bin mel slice and prosody values in `TELEMETRY_UPDATE` payload.
-* **Expected Behavior**: Speaking into microphone drives real frequency waterfall and real pitch curve on charts.
-* **Validation Criteria**: ThreatDial sits at low baseline ($10–25$) during natural speech; waterfall shows speech formants.
-* **Failure Scenarios**: Canvas frozen (verify array length == 80); prosody missing (verify Parselmouth C-lib loaded).
-* **Definition of Done (DoD)**: Visualizers driven by real live audio feature extraction in real time.
-* **Priority**: **P0** | **Effort**: MEDIUM.
-
-### Phase D5: Live Voice Clone Attack & Threat Escalation Integration
-* **Backend Dependency**: Phase B7, B11 (ResNet-18 anti-spoofing, Asymmetric EMA).
-* **Frontend Dependency**: Phase C8 (Threat State Banner), Phase C3 (Attack Mode Toggle).
-* **Integration Contract**: Synthetic clone audio injected via client or virtual audio cable.
-* **Expected Behavior**: Injected clone causes acoustic risk to surge; Asymmetric EMA drives ThreatDial past 75 (RED).
-* **Validation Criteria**: Threat state transitions from GREEN to RED within 2 analysis hops ($<2.0\text{ s}$).
-* **Failure Scenarios**: Attack fails to escalate (verify ResNet model loaded, check mel scaling).
-* **Definition of Done (DoD)**: Synthetic audio attack reliably triggers RED threat state in live integration.
-* **Priority**: **P0** | **Effort**: MEDIUM.
-
-### Phase D6: PITCH Challenge-Response Closed-Loop Integration
-* **Backend Dependency**: Phase B12 (PITCH challenge evaluator).
-* **Frontend Dependency**: Phase C9 (`PitchChallengeDrawer.tsx`).
-* **Integration Contract**: Challenge trigger event emitted by backend on AMBER; response audio evaluated.
-* **Expected Behavior**: AMBER state slides open PITCH drawer with Hindi phrase; reading phrase passes challenge.
-* **Validation Criteria**: Successful challenge completion drops risk back to GREEN; delayed/flat speech triggers RED.
-* **Failure Scenarios**: Challenge timeout (escalate to RED); phrase display rendering bug (verify Unicode UTF-8).
-* **Definition of Done (DoD)**: PITCH challenge-response loop functioning end-to-end between client and server.
-* **Priority**: **P1** | **Effort**: MEDIUM.
-
-### Phase D7: Pre-Transaction Security Gate & Banking UI Integration
-* **Backend Dependency**: Phase B13 (`POST /v1/transaction/evaluate-authorization`).
-* **Frontend Dependency**: Phase C10 (`MockBankingGate.tsx`).
-* **Integration Contract**: JSON transaction payload and HTTP 200/403/428 response contract.
-* **Expected Behavior**: Initiating UPI transfer queries backend gate:
-  * Under GREEN voice state: Returns HTTP 200 $\rightarrow$ Mock banking gate unlocks and completes transfer.
-  * Under RED voice state: Returns HTTP 403 $\rightarrow$ Mock banking gate immediately freezes and locks account.
-* **Validation Criteria**: Presenter enters PIN during RED state; UI displays instant "TRANSACTION FROZEN" lock modal.
-* **Failure Scenarios**: Gate returns 500 (fail-secure: default to BLOCKED); race condition (session lookup $<25\text{ ms}$).
-* **Definition of Done (DoD)**: Pre-transaction circuit breaker deterministically blocks fraudulent payments in UI.
-* **Priority**: **P0** | **Effort**: MEDIUM.
-
-### Phase D8: Audit Ledger & Forensic Evidence Integration
-* **Backend Dependency**: Phase B15, B17 (PostgreSQL `transaction_evaluations` records).
-* **Frontend Dependency**: Phase C11 (Security Event Log), Phase C12 (Session History View).
-* **Integration Contract**: Database evaluation query and real-time security events.
-* **Expected Behavior**: Every blocked transaction immediately appends a forensic record to the audit log.
-* **Validation Criteria**: Blocked wire transfer appears in database table and renders in frontend security ledger.
-* **Failure Scenarios**: Database write failure (log error, do not fail transaction authorization).
-* **Definition of Done (DoD)**: Forensic decision trail visible in UI and persisted in database.
-* **Priority**: **P1** | **Effort**: LOW.
-
-### Phase D9: End-to-End Rehearsal of the 5-Minute Demo Flow
-* **Backend Dependency**: Complete integrated backend.
-* **Frontend Dependency**: Complete integrated frontend.
-* **Integration Contract**: Full platform operating under Docker Compose orchestration.
-* **Expected Behavior**: Full execution of the 10-step demo script (Section 12.1) without restarts or glitches.
-* **Validation Criteria**: 3 consecutive flawless runs from initial startup to transaction circuit breaking.
-* **Failure Scenarios**: Browser permissions lost; port conflict; Docker out-of-memory.
-* **Definition of Done (DoD)**: Complete live demo flow validated and repeatable.
-* **Priority**: **P0** | **Effort**: MEDIUM.
-
-### Phase D10: Integration Bug Fixing & Hardening
-* **Backend Dependency**: Bug triage across all backend components.
-* **Frontend Dependency**: Bug triage across all frontend components.
-* **Integration Contract**: All system contracts.
-* **Expected Behavior**: Rapid resolution of edge cases, race conditions, UI visual misalignments, or log noise.
-* **Validation Criteria**: Zero unhandled exceptions in browser console; zero 500 errors in backend logs.
-* **Definition of Done (DoD)**: All integration bugs resolved; platform stable and polished.
-* **Priority**: **P0** | **Effort**: MEDIUM.
+| Phase | Title | Shub (Backend Owner) | Sion (Frontend Owner) | DoD | Priority |
+| :--- | :--- | :--- | :--- | :--- | :---: |
+| **D1** | REST API Client Wiring | Host `/health` & Gate API | Wire `lib/api/client.ts` | Frontend health pill turns green | **P0** |
+| **D2** | WebSocket Telemetry Wiring | Emit `TELEMETRY_UPDATE` | Ingest into `useTelemetryStore` | Real packet indices update live | **P0** |
+| **D3** | Real Audio Ingestion Wiring | Buffer PCM in Redis | Stream mic via `useAudioStreamer` | Redis buffer length hits 24 | **P0** |
+| **D4** | Real AI Visualizer Sync | Send real mel & prosody | Render Canvas & Charts | Voice drives live formants/pitch | **P0** |
+| **D5** | Live Clone Attack Sync | Run ResNet & Asymmetric EMA | Toggle attack mode in UI | Score surges to RED in $<2\text{ s}$ | **P0** |
+| **D6** | PITCH Closed-Loop Wiring | Emit challenge & check lag | Render Devanagari phrase drawer | Challenge completion clears threat | **P1** |
+| **D7** | Pre-Transaction Gate Wiring | Return HTTP 200/403 on session | Connect UPI PIN submit button | RED voice freezes wire transfer | **P0** |
+| **D8** | Audit Ledger Integration | Save evaluations to DB | Display in Session History View | Decisions visible in UI table | **P1** |
+| **D9** | Full Demo Rehearsal Wiring | Run complete Docker stack | Execute 10-step demo script | 3 consecutive runs pass 100% | **P0** |
+| **D10**| Bug Triage & Hardening | Fix backend edge cases | Fix UI alignment/console errors | Zero unhandled errors | **P0** |
 
 ---
 
-## 7. Section E: Final Validation & Demo Track (E1–E10)
+## 8. Section E: Final Validation & Demo Track (E1–E10) [Joint Ownership]
 
-*Final stabilization, security validation, and release lock before live presentation.*
+*Joint final stabilization, security verification, and release freeze.*
 
-### Phase E1: Security Validation & Vulnerability Audit
-* **Scope**: Verify CORS restrictions, API key enforcement, SQL parameterization, and non-root container execution.
-* **Validation**: Run `docker compose exec api pip audit`; verify no unauthorized endpoints exist.
-* **Definition of Done**: Zero high-severity vulnerabilities; security checklist satisfied.
-* **Priority**: **P0** | **Effort**: LOW.
-
-### Phase E2: Privacy & DPDP Compliance Audit
-* **Scope**: Verify host filesystem and database contain zero raw audio (`.wav`, `.pcm`, base64 strings).
-* **Validation**: Execute `find / -name "*.wav"` inside containers; inspect database tables for audio blobs.
-* **Definition of Done**: Mathematical proof that system stores only derived 192-dim vectors and scalar telemetry.
-* **Priority**: **P0** | **Effort**: LOW.
-
-### Phase E3: AI/ML Inference Credibility Validation
-* **Scope**: Confirm ONNX Runtime is executing real model weights (`silero_vad.onnx`, `resnet18_acoustic_quantized.onnx`).
-* **Validation**: Inspect backend startup logs; confirm `ONNX models loaded successfully (mock inference DISABLED)`.
-* **Definition of Done**: Zero random number math in active inference pathways.
-* **Priority**: **P0** | **Effort**: LOW.
-
-### Phase E4: Telephony Audio Robustness Check
-* **Scope**: Test detector against bandpass-filtered audio ($300–3,400\text{ Hz}$) emulating AMR-NB phone lines.
-* **Validation**: Confirm biomechanical prosody ($F_0$, jitter) and PITCH challenges maintain discrimination on 8kHz audio.
-* **Definition of Done**: Telephony resilience documented in presentation materials.
-* **Priority**: **P1** | **Effort**: LOW.
-
-### Phase E5: API Contract & Schema Conformance Check
-* **Scope**: Validate all incoming and outgoing payloads against frozen Pydantic and TypeScript interfaces.
-* **Validation**: Run automated schema validation tests across all REST and WebSocket routes.
-* **Definition of Done**: 100% schema conformance; zero missing or unexpected fields.
-* **Priority**: **P0** | **Effort**: LOW.
-
-### Phase E6: End-to-End System Integration Test Run
-* **Scope**: Execute full automated end-to-end integration test suite (`pytest backend/tests/`).
-* **Validation**: All tests pass including streaming ingestion, VAD gating, and transaction blocking.
-* **Definition of Done**: Complete test suite passes with green exit code.
-* **Priority**: **P0** | **Effort**: LOW.
-
-### Phase E7: Empirical Latency & Performance Benchmarking
-* **Scope**: Measure and record actual p50/p95/p99 latencies for Tier 1 inference and transaction evaluation.
-* **Validation**: Run benchmark script; verify Tier 1 latency $<80\text{ ms}$ and Gate latency $<35\text{ ms}$.
-* **Definition of Done**: Empirical performance numbers documented in `README.md` and presentation slides.
-* **Priority**: **P1** | **Effort**: LOW.
-
-### Phase E8: Full 5-Minute Live Demo Rehearsal
-* **Scope**: Presenter conducts 5 back-to-back timed rehearsals of the 5-minute live demo script.
-* **Validation**: 100% success rate without manual container restarts or browser refreshes.
-* **Definition of Done**: Presenter confident; timing locked to 4.5 minutes (30s buffer).
-* **Priority**: **P0** | **Effort**: MEDIUM.
-
-### Phase E9: Documentation Lock & README Finalization
-* **Scope**: Update `README.md` and `MEMORY.md` with verified setup instructions, architecture diagrams, and test results.
-* **Validation**: Fresh clone verified using documented setup commands.
-* **Definition of Done**: All documentation synchronized and locked.
-* **Priority**: **P0** | **Effort**: LOW.
-
-### Phase E10: Final Demo Release Candidate Tag
-* **Scope**: Tag git release `v1.0.0-demo-freeze`; lock codebase against any further modifications.
-* **Validation**: Working tree clean; git tag verified locally.
-* **Definition of Done**: Codebase frozen; demo laptop configured and offline-capable.
-* **Priority**: **P0** | **Effort**: LOW.
+* **E1 (Security Validation)**: Audit CORS, API key enforcement, SQL parameterization, and non-root Docker execution.
+* **E2 (Privacy & DPDP Compliance Audit)**: Mathematical inspection proving zero raw audio files (`.wav`/`.pcm`) exist on disk.
+* **E3 (AI Model Credibility Check)**: Verify real ONNX models are active (`silero_vad.onnx`, `resnet18_acoustic_quantized.onnx`).
+* **E4 (Telephony Robustness Check)**: Verify detector resilience on $300–3,400\text{ Hz}$ bandpass-filtered audio.
+* **E5 (Schema Conformance Check)**: Verify 100% request/response conformance across Pydantic and TypeScript interfaces.
+* **E6 (End-to-End Test Suite)**: Execute `pytest backend/tests/` and Next.js compiler check (`npm run build`).
+* **E7 (Latency Benchmarking)**: Document empirical p95 latencies (Tier 1 $<80\text{ ms}$, Pre-Transaction Gate $<35\text{ ms}$).
+* **E8 (5-Minute Live Demo Rehearsal)**: Presenters execute 5 back-to-back rehearsals within a strict 4.5-minute window.
+* **E9 (Documentation Lock)**: Finalize `README.md` and `MEMORY.md` with verified setup instructions and benchmark numbers.
+* **E10 (Release Freeze Tag)**: Apply git release tag `v1.0.0-demo-freeze`; lock codebase against further modifications.
 
 ---
 
-## 8. Parallelization Matrix & Execution Graph
+## 9. Detailed Dependency Matrix
 
-The following matrix governs team concurrency. Any phase marked **Parallel: YES** can proceed simultaneously with its counterpart in the other track.
-
-| Phase | Track | Description | Backend Dep | Frontend Dep | Parallel? | Blocking Predecessor |
-| :--- | :--- | :--- | :--- | :--- | :---: | :--- |
-| **A0–A4** | SHARED | Baseline, Specs, Contracts, Config | None | None | **NO** | Must complete first |
-| **B1** | BACKEND | FastAPI Baseline & Structlog | A4 | None | **YES** | A4 |
-| **C1** | FRONTEND| Types & Next.js Foundation | None | A2 | **YES** | A2 |
-| **B2** | BACKEND | Audio Ingestion & WebSocket | B1 | None | **YES** | B1 |
-| **C2** | FRONTEND| App Shell & Cybernetic Theme | None | C1 | **YES** | C1 |
-| **B3** | BACKEND | Redis Ring Buffer (24-frame) | B2 | None | **YES** | B2 |
-| **C3** | FRONTEND| Session Controls & Mode Toggle | None | C2 | **YES** | C2 |
-| **B4** | BACKEND | Silero VAD Silence Stripping | B3 | None | **YES** | B3 |
-| **C4** | FRONTEND| Telemetry Metric Cards | None | C2 | **YES** | C2 |
-| **B5** | BACKEND | 80-bin Log-Mel Spectrogram | B4 | None | **YES** | B4 |
-| **C5** | FRONTEND| 60 FPS Spectrogram Canvas | None | C2 | **YES** | C2 |
-| **B6** | BACKEND | Praat Parselmouth Prosody | B4 | None | **YES** | B4 |
-| **C6** | FRONTEND| Prosody Time-Series Chart | None | C2 | **YES** | C2 |
-| **B7** | BACKEND | ResNet-18 Quantized ONNX | B5 | None | **YES** | B5 |
-| **C7** | FRONTEND| ThreatDial Animated Gauge | None | C2 | **YES** | C2 |
-| **B8** | BACKEND | ECAPA-TDNN & pgvector | B4, B15 | None | **YES** | B4, B15 |
-| **C8** | FRONTEND| GREEN / AMBER / RED States | None | C7 | **YES** | C7 |
-| **B9** | BACKEND | Multi-Signal Feature Fusion | B5, B6, B7 | None | **YES** | B7 |
-| **C9** | FRONTEND| PITCH Challenge Drawer UI | None | C8 | **YES** | C8 |
-| **B10**| BACKEND | Risk Scoring Engine | B9 | None | **YES** | B9 |
-| **C10**| FRONTEND| Mock Banking Gate UPI UI | None | C8 | **YES** | C8 |
-| **B11**| BACKEND | Asymmetric EMA & State Machine| B10 | None | **YES** | B10 |
-| **C11**| FRONTEND| Security Alerts & Evidence Log | None | C4 | **YES** | C4 |
-| **B12**| BACKEND | PITCH Challenge Logic | B6, B11 | None | **YES** | B11 |
-| **C12**| FRONTEND| Session Audit History View | None | C2 | **YES** | C2 |
-| **B13**| BACKEND | Pre-Transaction Security Gate | B11 | None | **YES** | B11 |
-| **C13**| FRONTEND| Typed API Client Module | None | C1 | **YES** | C1 |
-| **B14**| BACKEND | Redis 15s TTL Hardening | B3 | None | **YES** | B3 |
-| **C14**| FRONTEND| WebSocket & Audio Capture Hook | None | C1 | **YES** | C1 |
-| **B15**| BACKEND | PostgreSQL + pgvector Setup | B1 | None | **YES** | B1 |
-| **C15**| FRONTEND| Error Boundaries & Reconnect | None | C14 | **YES** | C14 |
-| **B16**| BACKEND | API Hardening & Rate Limiting | B1, B13 | None | **YES** | B13 |
-| **C16**| FRONTEND| Responsive & Theme Polish | None | C2–C12 | **YES** | C2–C12 |
-| **B17**| BACKEND | Latency Instrumentation | B1–B13 | None | **YES** | B13 |
-| **C17**| FRONTEND| Standalone Demo Readiness | None | C1–C16 | **YES** | C1–C16 |
-| **B18**| BACKEND | Zero-Storage Security Audit | B14, B15 | None | **YES** | B15 |
-| **B19**| BACKEND | Performance Benchmarking | B17 | None | **YES** | B17 |
-| **B20**| BACKEND | Backend Standalone Readiness | B1–B19 | None | **YES** | B1–B19 |
-| **D1–D10**| INTEGRATION| End-to-End System Convergence | B20 | C17 | **NO** | Both B20 & C17 |
-| **E1–E10**| FINAL | Hardening, Rehearsal, Freeze | D10 | D10 | **NO** | D10 |
+| Phase | Owner | Depends On | Can Run in Parallel? | Blocks |
+| :--- | :--- | :--- | :---: | :--- |
+| **A0–A4** | Joint | None | **NO** | Backend (B1) + Frontend (C1) |
+| **B1** | Shub | A4 | **YES** | B2, B15, B16 |
+| **C1** | Sion | A2 | **YES** | C2, C13, C14 |
+| **B2** | Shub | B1 | **YES** | B3, B14 |
+| **C2** | Sion | C1 | **YES** | C3, C4, C5, C6, C7, C12, C15 |
+| **B3** | Shub | B2 | **YES** | B4, B14 |
+| **C3** | Sion | C2 | **YES** | C17, D5 |
+| **B4** | Shub | B3 | **YES** | B5, B6, B8 |
+| **C4** | Sion | C2 | **YES** | C11, D2 |
+| **B5** | Shub | B4 | **YES** | B7, B9 |
+| **C5** | Sion | C2 | **YES** | C16, D4 |
+| **B6** | Shub | B4 | **YES** | B9, B12 |
+| **C6** | Sion | C2 | **YES** | C16, D4 |
+| **B7** | Shub | B5 | **YES** | B9 |
+| **C7** | Sion | C2 | **YES** | C8, D4 |
+| **B8** | Shub | B4, B15 | **YES** | B9 |
+| **C8** | Sion | C7 | **YES** | C9, C10, D5 |
+| **B9** | Shub | B5, B6, B7 | **YES** | B10 |
+| **C9** | Sion | C8 | **YES** | C16, D6 |
+| **B10**| Shub | B9 | **YES** | B11 |
+| **C10**| Sion | C8 | **YES** | C16, D7 |
+| **B11**| Shub | B10 | **YES** | B12, B13 |
+| **C11**| Sion | C4 | **YES** | C16, D8 |
+| **B12**| Shub | B6, B11 | **YES** | D6 |
+| **C12**| Sion | C2 | **YES** | D8 |
+| **B13**| Shub | B11 | **YES** | B16, D7 |
+| **C13**| Sion | C1 | **YES** | D1 |
+| **B14**| Shub | B3 | **YES** | B18 |
+| **C14**| Sion | C1 | **YES** | C15, D2, D3 |
+| **B15**| Shub | B1 | **YES** | B8, B18, D8 |
+| **C15**| Sion | C14 | **YES** | C17 |
+| **B16**| Shub | B1, B13 | **YES** | D1 |
+| **C16**| Sion | C2–C12, Shub Design Specs | **YES** | C17 |
+| **B17**| Shub | B1–B13 | **YES** | B19, D2 |
+| **C17**| Sion | C1–C16 | **YES** | D1–D10 (Integration) |
+| **B18**| Shub | B14, B15 | **YES** | E2 |
+| **B19**| Shub | B17 | **YES** | E7 |
+| **B20**| Shub | B1–B19 | **YES** | D1–D10 (Integration) |
+| **D1–D10**| Joint | B20 + C17 | **NO** | E1–E10 (Final Validation) |
+| **E1–E10**| Joint | D10 | **NO** | Demo Release Freeze |
 
 ---
 
-## 9. MVP Cut Line & Priority Governance
-
-### 9.1 The 11 Mandatory MVP Capabilities (P0 Cut Line)
-To guarantee delivery within the deadline, the team enforces a strict MVP scope cut line. The live demo is judged complete if and only if these 11 items succeed end-to-end:
+## 10. Two Critical Paths & Execution Architecture
 
 ```
-┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
-│                                     MANDATORY MVP CUT LINE (P0)                                  │
-├─────┬───────────────────────────────┬────────────────────────────────────────────────────────────┤
-│ #   │ Capability                    │ Concrete Deliverable in Repo                               │
-├─────┼───────────────────────────────┼────────────────────────────────────────────────────────────┤
-│ 1   │ Voice Session Creation        │ Client initiates call session via WebSocket handshake      │
-│ 2   │ Audio Ingestion               │ Web Audio API captures 16kHz 16-bit PCM in 64ms chunks     │
-│ 3   │ Audio Buffering               │ Redis / In-memory 24-frame sliding buffer (1.5s context)   │
-│ 4   │ Voice Activity Detection      │ Silero VAD discards unvoiced windows (<15% speech)         │
-│ 5   │ Genuine AI/DSP Authenticity   │ ResNet-18 ONNX mel analysis + Praat Parselmouth prosody    │
-│ 6   │ Continuous Risk Scoring       │ Multi-signal weighted fusion producing score [0, 100]      │
-│ 7   │ Temporal Threat State         │ Asymmetric EMA with hysteresis (GREEN / AMBER / RED)       │
-│ 8   │ PITCH Challenge-Response      │ Dynamic Hindi tongue-twister prompt displayed in UI        │
-│ 9   │ Transaction Security Gate     │ Synchronous REST gate blocking high-value transfer on RED  │
-│ 10  │ SecOps War Room Visualization │ Next.js dashboard (ThreatDial, Canvas waterfall, UPI gate) │
-│ 11  │ End-to-End System Integration │ Live attack triggers visible RED state and payment freeze  │
-└─────┴───────────────────────────────┴────────────────────────────────────────────────────────────┘
+                                      SHARED FOUNDATION
+                                           (A0-A4)
+                                              │
+                    ┌─────────────────────────┴─────────────────────────┐
+                    ▼                                                   ▼
+       BACKEND CRITICAL PATH (Shub)                        FRONTEND CRITICAL PATH (Sion)
+    FastAPI & Logging (B1)                              Types & Next.js Foundation (C1)
+            │                                                   │
+    WebSocket Audio Ingestion (B2)                      App Shell & Navigation (C2)
+            │                                                   │
+    Redis Ring Buffer 24-frame (B3)                     Session Controls & Mic Toggle (C3)
+            │                                                   │
+    Silero VAD Silence Strip (B4)                       Live Telemetry Stat Cards (C4)
+            │                                                   │
+    80-bin Mel Spectrogram (B5)                         Spectrogram Canvas 60 FPS (C5)
+            │                                                   │
+    Praat Parselmouth Prosody (B6)                      Prosody Real-Time Chart (C6)
+            │                                                   │
+    ResNet-18 Quantized ONNX (B7)                       ThreatDial Radial Gauge (C7)
+            │                                                   │
+    Multi-Signal Feature Fusion (B9)                    Threat State Banner GREEN/RED (C8)
+            │                                                   │
+    Risk Scoring Engine (B10)                           PITCH Challenge Drawer (C9)
+            │                                                   │
+    Asymmetric EMA State Machine (B11)                  Mock UPI Banking Gate (C10)
+            │                                                   │
+    Pre-Transaction Gate (B13)                          Client Networking (C13, C14)
+            │                                                   │
+    Backend Demo Readiness (B20)                        Visual Polish & Design Specs (C16)
+            │                                                   │
+            │                                           Frontend Demo Readiness (C17)
+            │                                                   │
+            └─────────────────────────┬─────────────────────────┘
+                                      ▼
+                             INTEGRATION (D1 - D10)
+                                      ▼
+                           FINAL VALIDATION (E1 - E10)
+                                      ▼
+                            DEMO RELEASE FREEZE
 ```
 
-### 9.2 Priority Classification Taxonomy
-* **P0 (Mandatory for Demo)**: The 11 MVP items above. Failure of any P0 item constitutes demo failure.
-* **P1 (Important Credibility)**: ECAPA-TDNN speaker verification, telephony AMR simulation, structured latency logs, PITCH response latency measurement.
-* **P2 (Optional Polish)**: Historical session audit view tab, advanced theme customization, secondary export tools.
-* **P3 (Deferred Future Work)**: Carrier-grade SIPREC media-forking, multi-tenant enterprise RBAC, distributed Kafka bus, heavy foundation models (Wav2Vec2/XLS-R), native mobile OS wrappers.
+---
+
+## 11. MVP Cut Line & Scope Boundaries
+
+### 11.1 The 11 Mandatory MVP Deliverables (P0 Cut Line)
+The live demo is certified complete if and only if these 11 capabilities function end-to-end:
+1. **Voice Session Creation**: Client initiates call session via WebSocket handshake (`A2`, `B2`, `C3`).
+2. **Audio Ingestion**: Browser captures 16kHz 16-bit PCM in 64ms discrete chunks (`B2`, `C14`).
+3. **Audio Buffering**: Redis in-memory 24-frame circular buffer with 15s TTL (`B3`, `B14`).
+4. **Voice Activity Detection**: Silero VAD discards unvoiced windows ($<15\%$ speech) (`B4`).
+5. **Authentic AI/DSP Signals**: Quantized ResNet-18 ONNX vocoder cues + Parselmouth prosody (`B5`, `B6`, `B7`).
+6. **Continuous Risk Scoring**: Multi-signal weighted fusion producing instantaneous score $[0, 100]$ (`B9`, `B10`).
+7. **Temporal Threat State**: Asymmetric EMA ($\alpha_{\text{up}}=0.65, \alpha_{\text{down}}=0.25$) with hysteresis (`B11`, `C8`).
+8. **PITCH Challenge-Response**: Dynamic Hindi tongue-twister prompt displayed in UI drawer (`B12`, `C9`).
+9. **Transaction Security Gate**: Synchronous REST gate halting payment on RED threat state (`B13`, `C10`).
+10. **SecOps War Room Console**: High-contrast UI (ThreatDial, Canvas waterfall, UPI gate) (`C2`–`C10`).
+11. **End-to-End System Convergence**: Injected clone attack visibly triggers RED state and UPI payment freeze (`D1`–`D10`).
+
+### 11.2 Priority Taxonomy
+* **P0 (Mandatory)**: The 11 MVP capabilities above. Non-negotiable for hackathon evaluation.
+* **P1 (Important Credibility)**: ECAPA-TDNN speaker verification (`B8`), AMR telephony simulation (`E4`), granular latency tracing (`B17`), forensic evidence drawer (`C11`).
+* **P2 (Optional Polish)**: Session audit history tab (`C12`), secondary export utilities, theme customization.
+* **P3 (Deferred Future Work)**: Carrier SIPREC media forking, multi-tenant enterprise RBAC, distributed Kafka bus, 1GB+ foundation models (Wav2Vec2/XLS-R), native iOS/Android telephony hooks.
 
 ---
 
-## 10. Anti-Over-Engineering Charter
+## 12. Anti-Over-Engineering Charter
 
-The engineering team strictly prohibits the following architectural distractions:
-1. **NO Microservices Sprawl**: Run a clean, unified FastAPI service. Do not decompose into separate VAD services, prosody services, or auth microservices.
-2. **NO Cloud Message Queues**: Do not introduce Kafka, RabbitMQ, or AWS SQS. Redis 7.2 list operations provide all necessary buffering.
-3. **NO Premature Kubernetes / Helm**: Docker Compose orchestrates the four containers (`api`, `redis`, `postgres`, `frontend`) perfectly.
-4. **NO Heavy Foundation Models**: Strictly ban 1GB+ HuggingFace checkpoints (Wav2Vec2, HuBERT, Whisper). Use quantized ONNX models ($<50\text{ MB}$) that execute in $<30\text{ ms}$ on edge CPUs.
-5. **NO Unnecessary Database Engines**: PostgreSQL 16 with `pgvector` handles both relational audit logs and vector embeddings. Do not introduce Milvus, Pinecone, or Chroma.
-6. **NO Real Payment Gateway Integrations**: Do not integrate Razorpay or Stripe live test keys. The interactive `MockBankingGate` PIN pad tells the security story cleanly and reliably.
-7. **NO Complex Client Frameworks**: Use standard React 19 + Zustand + Canvas. Do not introduce complex WebRTC mesh topologies or WASM DSP pipelines.
+Both developers are bound by this anti-distraction charter:
+1. **NO Microservices Sprawl**: Run a clean, unified FastAPI service. Do not split into separate microservices.
+2. **NO Cloud Message Queues**: Do not introduce Kafka, RabbitMQ, or AWS SQS. Redis 7.2 lists handle buffering.
+3. **NO Premature Kubernetes**: Docker Compose orchestrates the four containers (`api`, `redis`, `postgres`, `frontend`).
+4. **NO Heavy Foundation Models**: Strictly ban 1GB+ models (Wav2Vec2, Whisper). Use quantized ONNX models ($<50\text{ MB}$).
+5. **NO Redundant Vector Databases**: PostgreSQL 16 with `pgvector` handles relational audit logs and vector embeddings.
+6. **NO Live Payment Gateways**: Do not integrate real Razorpay/Stripe APIs. The interactive `MockBankingGate` PIN pad tells the security story cleanly.
+7. **NO Unnecessary Framework Swaps**: Stick to Next.js 16 + React 19 + Tailwind. Do not rewrite UI systems for styling convenience.
 
 ---
 
-## 11. Git Safety Protocol & Memory Governance
+## 13. Git Safety Rules & Memory Governance
 
-### 11.1 Absolute Git Safety Rules
-* **NEVER AUTOMATICALLY PUSH TO GITHUB**:
-  The AI assistant and automated scripts are strictly prohibited from executing `git push`, force-pushing, merging to `main`, or triggering remote releases.
-* **LOCAL MODIFICATIONS ONLY**:
-  All code changes must remain local to the development machine until explicit human authorization is granted.
-* **HUMAN COMMIT REVIEW**:
-  Every commit must be explicitly requested and reviewed by the human engineering lead.
+### 13.1 Absolute Git Safety Rules
+* **ANTI-GRAVITY MUST NEVER PUSH TO GITHUB AUTOMATICALLY**:
+  Under no circumstances may Anti-Gravity or automated scripts execute `git push`, force push, merge to `main`, delete branches, or trigger remote GitHub releases.
+* **LOCAL EXECUTION ONLY**:
+  All code changes remain strictly local on the developer's machine until explicit human authorization is granted.
+* **HUMAN-AUTHORIZED COMMITS**:
+  Git commits may only be prepared locally upon explicit instruction from Shub or Sion.
 
-### 11.2 Standardized `MEMORY.md` Protocol
-At the conclusion of **every completed phase**, the responsible engineer/agent must update [`MEMORY.md`](file:///d:/Voice-Cloning-Prototype/MEMORY.md). The ledger maintains separate statuses for each track to avoid overwriting concurrent progress:
+### 13.2 Standardized `MEMORY.md` Protocol
+At the conclusion of every completed phase, update [`MEMORY.md`](file:///d:/Voice-Cloning-Prototype/MEMORY.md) maintaining separate tracks to prevent overwriting concurrent progress:
 
 ```markdown
 ### [YYYY-MM-DD HH:MM] Phase [ID] Completion: [Phase Name]
 - **Track**: SHARED | BACKEND | FRONTEND | INTEGRATION | FINAL
 - **Status**: COMPLETE | IN PROGRESS | BLOCKED
-- **Owner**: Backend Lead / Frontend Lead / AI Agent
+- **Owner**: Person A (Shub) / Person B (Sion) / Joint
 - **What Changed**: Concise summary of delivered capabilities.
 - **Files Created**:
   - `path/to/created_file`
 - **Files Modified**:
   - `path/to/modified_file`
-- **Architecture / Contract Changes**: None (or explicit diff).
+- **Contract Changes**: None (or explicit versioned diff).
+- **Design Changes**: Summary of UI styling/layout updates (Frontend track).
 - **Dependencies Added**: Package names and pinned versions.
-- **Validation Performed**: Command executed and concrete test results.
+- **Validation Performed**: Test command and numerical result.
 - **Known Issues / Tech Debt**: Non-blocking observations.
-- **Blockers**: Any blocking dependency for next phase.
+- **Blockers**: Any blocking item for subsequent phases.
+- **Mock vs Real Status**: Explicit statement of mock vs live implementation.
 - **Next Phase**: Recommended next milestone.
 ```
 
-### 11.3 Phase Completion Report Format
-When reporting phase completion to the team, output only this concise 9-line summary:
-```
-PHASE:         [Phase ID, e.g., B7]
-TRACK:         [BACKEND / FRONTEND / INTEGRATION / FINAL]
+### 13.3 Phase Completion Report Schema
+At the conclusion of each phase, output this standardized report:
+```text
+PHASE:         [Phase ID, e.g., B7 or C9]
+OWNER:         [Person A — Shub / Person B — Sion / Joint]
 STATUS:        [COMPLETE / PARTIAL / BLOCKED]
-WHAT CHANGED:  [1-2 sentence technical summary]
-FILES:         [List of created/modified files]
-VALIDATION:    [Test command and numerical result]
+OBJECTIVE:     [1 sentence on goal]
+COMPLETED:     [Summary of delivered code]
+FILES CHANGED: [List of affected files]
+CONTRACT CHANGES: [None or documented diff]
+DESIGN CHANGES:   [Summary of UI/design inputs applied (Frontend track)]
+VALIDATION:    [Test command and concrete result]
 KNOWN ISSUES:  [None or brief issue summary]
-MEMORY.md:     [UPDATED - Section recorded]
+BLOCKERS:      [None or blocking item]
+MOCK / REAL STATUS: [Explicitly state if live or simulated]
 NEXT PHASE:    [Next Phase ID]
 ```
 
 ---
 
-## 12. Checklists & Demo Runbook
+## 14. Checklists & 5-Minute Live Demo Runbook
 
-### 12.1 The 5-Minute Live Demo Choreography
+### 14.1 The 5-Minute Live Demo Script
 ```
 ┌───────┬───────────────────────────┬──────────────────────────────────────────────────────────────┐
 │ Step  │ Action / Event            │ Observable System Behavior & Telemetry                       │
@@ -1151,7 +1055,7 @@ NEXT PHASE:    [Next Phase ID]
 └───────┴───────────────────────────┴──────────────────────────────────────────────────────────────┘
 ```
 
-### 12.2 Demo-Day Pre-Flight Checklist
+### 14.2 Demo-Day Pre-Flight Checklist
 - [ ] Docker containers running cleanly (`docker compose ps` shows 4 healthy services).
 - [ ] Browser microphone permissions granted on demo workstation.
 - [ ] Audio input levels verified: RMS volume meter reacts cleanly to speech.
@@ -1163,7 +1067,7 @@ NEXT PHASE:    [Next Phase ID]
 - [ ] Audit verification: PostgreSQL `transaction_evaluations` records show blocked attempt.
 - [ ] DPDP proof: Host filesystem inspected; zero raw `.wav` or `.pcm` files exist on disk.
 
-### 12.3 Final Freeze Checklist
+### 14.3 Final Freeze Checklist
 - [ ] All code changes reviewed and merged into working branch.
 - [ ] No uncommitted or untracked temporary files in repository.
 - [ ] Quantized model files verified in `models/` directory.
@@ -1172,3 +1076,47 @@ NEXT PHASE:    [Next Phase ID]
 - [ ] `README.md` updated with accurate clone, build, and run instructions.
 - [ ] `MEMORY.md` updated with final completion ledger entry.
 - [ ] Git release tagged: `v1.0.0-demo-freeze`.
+
+---
+
+## 15. Two-Developer Operational Governance FAQ
+
+### Q1: Who is responsible for each phase?
+* **Shared Foundation (`A0`–`A4`)**: Joint (Shub & Sion).
+* **Backend / AI Track (`B1`–`B20`)**: Person A — Shub.
+* **Frontend Track (`C1`–`C17`)**: Person B — Sion.
+* **Integration Track (`D1`–`D10`)**: Joint (Shub & Sion).
+* **Final Validation & Demo Track (`E1`–`E10`)**: Joint (Shub & Sion).
+
+### Q2: What exactly does Shub implement?
+FastAPI backend, WebSocket binary PCM ingestion, Redis ring buffer, Silero VAD, 80-bin mel spectrograms, Praat Parselmouth prosody, quantized ResNet-18 ONNX inference, ECAPA-TDNN vector extraction, PostgreSQL `pgvector`, Asymmetric EMA, Threat State Machine, PITCH challenge evaluator, Pre-Transaction Authorization Gate (`POST /v1/transaction/evaluate-authorization`), DPDP zero-storage controls, latency instrumentation, and backend test suites.
+
+### Q3: What exactly does Sion implement?
+Next.js App Router UI, TypeScript contract types, cybernetic dark theme shell, voice session controls, telemetry metric cards, 60 FPS Canvas spectrogram waterfall, prosody time-series charts, ThreatDial gauge, threat state banners, PITCH challenge drawer, Mock UPI banking gate with PIN pad, forensic evidence log, session history view, REST API client, WebSocket streaming client, error boundaries, and visual styling based on Shub's design specifications.
+
+### Q4: Which work can happen in parallel?
+All phases in Section B (`B1`–`B20`) and Section C (`C1`–`C17`) execute concurrently once Section A (`A0`–`A4`) contracts are locked. For example, Shub implements ResNet ONNX inference (`B7`) while Sion builds the ThreatDial gauge (`C7`).
+
+### Q5: Which work requires coordination?
+Contract definitions (`A2`, `A3`), design handoffs (Section 2.3), integration wiring (`D1`–`D10`), and final demo rehearsal (`E8`, `E10`).
+
+### Q6: What contracts must remain frozen?
+The REST endpoints (`/health`, `/v1/transaction/evaluate-authorization`, `/v1/enroll`), the WebSocket binary format ($16\text{ kHz}, 16\text{-bit}, 1024\text{ samples}$), and the outbound `TELEMETRY_UPDATE` JSON payload defined in Section 3.
+
+### Q7: How does frontend design customization enter the workflow?
+Shub provides design specifications (typography, colors, card styling, reference URLs, layouts) to Sion. Sion passes them to Anti-Gravity as styling guidance. Anti-Gravity applies them cleanly without altering contract schemas or backend architecture.
+
+### Q8: How can frontend development proceed using mocks?
+Sion uses `useSimulator.ts` to generate realistic synthetic telemetry, prosody curves, spectrogram slices, and risk score escalations matching the frozen WebSocket contract exactly, enabling complete UI development before the backend is running.
+
+### Q9: When do backend and frontend converge?
+At Section D (Integration Track, `D1`–`D10`), once Shub verifies backend standalone readiness (`B20`) and Sion verifies frontend standalone readiness (`C17`).
+
+### Q10: What is the exact MVP cut line?
+The 11 mandatory P0 capabilities detailed in Section 11.1. Everything outside this list is classified as P1, P2, or P3.
+
+### Q11: What must be recorded in `MEMORY.md`?
+Every completed phase must record: phase ID, owner (Shub / Sion / Joint), what changed, files created/modified, contract diffs, design changes, test results, blockers, and mock vs real status.
+
+### Q12: What must NOT be changed?
+The verified backend implementation sequence (`B1`–`B20`), the frozen contract schemas, the DPDP zero-storage policy, the MVP cut line, and the absolute prohibition against automatic Git pushes.
