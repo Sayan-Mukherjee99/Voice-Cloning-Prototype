@@ -65,6 +65,9 @@ VaaniShield investigates:
 │ PITCH Challenge      │ MOCK (UI ONLY)          │ Static Hindi phrase string sent over WebSocket; │
 │ Verification         │                         │ lacks backend ASR/pitch modulation check.       │
 ├──────────────────────┼─────────────────────────┼─────────────────────────────────────────────────┤
+│ Dataset & Protocol   │ IMPLEMENTED             │ ASVspoof 2019 LA verified (121,461 utterances;  │
+│ Ingestion Layer      │                         │ 7.12 GB); streaming JSONL manifests generated.  │
+├──────────────────────┼─────────────────────────┼─────────────────────────────────────────────────┤
 │ Self-Learning Log    │ PROPOSED                │ SQLite local learning registry (vaani_learning) │
 └──────────────────────┴─────────────────────────┴─────────────────────────────────────────────────┘
 ```
@@ -173,8 +176,8 @@ Analyze Cross-Dataset Generalization & Avoid Data Leakage
 ```
 
 1. **ASVspoof 2019 LA (Initial Baseline Training & Development)**:
-   - Partitioned into official train, dev, and eval sets.
-   - Status: **Download pending**.
+   - Partitioned into official train (25,380), dev (24,844), and eval (71,237) sets.
+   - Status: **VERIFIED & INTEGRATED** (121,461 CM utterances; 7.12 GB; streaming JSONL manifests generated; strict partition governance enforced).
 2. **ASVspoof 2021 DF (Cross-Dataset Generalization Evaluation)**:
    - Out-of-domain evaluation subset testing unseen vocoders and lossy compression.
    - Status: **Download pending** (Held out strictly for evaluation; NOT current training data).

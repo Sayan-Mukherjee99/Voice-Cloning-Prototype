@@ -328,6 +328,8 @@ The platform enforces a strict **Zero-Cost / Free-First** technical constraint:
 │                      │ Speaker Enrollment API  │ POST /v1/enroll extracting & persisting vectors │
 │                      │ Frontend Dashboard      │ Next.js 16, Zustand store, ThreatDial, Gate UI │
 │                      │ Biomechanical Prosody   │ Praat Parselmouth extracts F0, Jitter, Shimmer  │
+│                      │ Dataset & Preprocessing │ ASVspoof 2019 LA verified (121,461 utterances)   │
+│                      │                         │ JSONL manifests, non-destructive preprocessing   │
 ├──────────────────────┼─────────────────────────┼─────────────────────────────────────────────────┤
 │ MOCK / FALLBACK      │ Neural Anti-Spoofing    │ Heuristic fallback when model ONNX is absent    │
 │                      │ Silero VAD              │ RMS energy thresholding when ONNX is absent     │
@@ -366,7 +368,7 @@ docker compose up -d
 # System Health Diagnostic:   http://localhost:8000/health
 ```
 
-*Note: Pretrained model weights and training datasets are pending download and integration. The system currently boots with mock and heuristic fallbacks for end-to-end interface validation.*
+*Note: ASVspoof 2019 LA dataset is verified and indexed (121,461 utterances; 7.12 GB). Pretrained model weights in models/ remain unpopulated pending Phase B4 baseline training/integration. The system boots with mock and heuristic fallbacks for end-to-end interface validation when weights are absent.*
 
 ---
 

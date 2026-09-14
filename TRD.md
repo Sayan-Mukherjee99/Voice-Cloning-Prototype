@@ -227,7 +227,7 @@ Analyze Cross-Dataset Generalization & Avoid Data Leakage
 
 | Dataset | Designated Technical Role | Partitioning Protocol | Status |
 | :--- | :--- | :--- | :--- |
-| **ASVspoof 2019 LA** | **Initial Baseline Training & Development** | Official train, dev, and eval splits. Used to train/tune candidate models. | **Download Pending** |
+| **ASVspoof 2019 LA** | **Initial Baseline Training & Development** | Official train, dev, and eval splits. Used to train/tune candidate models. | **VERIFIED & INTEGRATED** (121,461 utterances; 7.12 GB at `datasets/LA/LA`; train/dev/eval streaming JSONL manifests generated; partition governance enforced) |
 | **ASVspoof 2021 DF** | **Cross-Dataset Generalization Evaluation** | Strictly held-out evaluation set. Measures resilience to unseen vocoders and compression. **NOT training data.** | **Download Pending** |
 | **ASVspoof 2021 LA** | **Communication Robustness Evaluation** | Evaluates robustness under telephony/codec channel effects relevant to live calls. **NOT training data.** | **Download Pending** |
 | **Future Datasets** (e.g., WaveFake) | **Independent Generalization** | Reserved for subsequent evaluation phases to test novel generative architectures. | **Future Scope** |

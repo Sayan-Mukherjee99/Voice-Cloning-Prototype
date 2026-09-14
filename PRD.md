@@ -303,7 +303,7 @@ Analyze Cross-Dataset Generalization & Avoid Data Leakage
 1. **Initial Baseline: ASVspoof 2019 LA**:
    - *Role*: Initial baseline training, development, and held-out evaluation for synthetic and spoofed speech detection.
    - *Protocol*: Strictly partitioned into training, development/validation, and evaluation subsets according to official keys.
-   - *Status*: **Download pending**.
+   - *Status*: **VERIFIED & INTEGRATED** (121,461 CM utterances verified across train [25,380], dev [24,844], and eval [71,237] partitions; 7.12 GB corpus at `datasets/LA/LA/`; streaming JSONL manifests generated; partition governance enforced).
 2. **Cross-Dataset Generalization: ASVspoof 2021 DF**:
    - *Role*: Evaluates model generalization against out-of-domain synthetic speech, unseen neural vocoders, and lossy compression.
    - *Protocol*: Held out strictly for cross-dataset evaluation. **NOT** the current training dataset.
@@ -459,6 +459,8 @@ Promote ONLY if Validated (Otherwise discard & rollback)
 │                      │ Speaker Enrollment API  │ POST /v1/enroll extracting & persisting vectors │
 │                      │ Frontend Dashboard      │ Next.js 16, Zustand store, ThreatDial, Gate UI │
 │                      │ Biomechanical Prosody   │ Praat Parselmouth extracts F0, Jitter, Shimmer  │
+│                      │ Dataset & Preprocessing │ ASVspoof 2019 LA verified (121,461 utterances)   │
+│                      │                         │ JSONL manifests, non-destructive preprocessing   │
 ├──────────────────────┼─────────────────────────┼─────────────────────────────────────────────────┤
 │ MOCK / FALLBACK      │ Neural Anti-Spoofing    │ Heuristic fallback when model ONNX is absent    │
 │                      │ Silero VAD              │ RMS energy thresholding when ONNX is absent     │

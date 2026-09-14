@@ -4,9 +4,9 @@
 | :--- | :--- |
 | **Project Name** | VaaniShield (वाणिShield) — Real-Time Voice Integrity & Anti-Spoofing Platform |
 | **Repository** | `Sayan-Mukherjee99/Voice-Cloning-Prototype` |
-| **Current Project Phase** | **Phase B2 Completed** (WebSocket Audio Streaming Stability) \| **Offline Deepfake Detection Direction Realignment** |
-| **Next Recommended Phase**| **Phase B3 — Offline Dataset Verification & Audio Preprocessing Foundation** (Backend Track / Shub) |
-| **Documentation Lock Status**| **SYNCHRONIZED (v2.3.0 Offline Deepfake Detection & Research Realignment)** |
+| **Current Project Phase** | **Phase B3 Completed** (Offline Dataset Ingestion & Audio Preprocessing Foundation) \| **AI Instructions v3.0.0 Active** |
+| **Next Recommended Phase**| **Phase B4 — Base Offline Speech Deepfake Detector (Candidate Baselines)** (Backend Track / Shub) |
+| **Documentation Lock Status**| **SYNCHRONIZED (v3.0.0 AI Instructions & v2.3.0 Architecture)** |
 | **Project Ownership** | Person A: **Shub** (Backend / AI Lead) \| Person B: **Sion** (Frontend Lead) |
 | **Ledger Last Updated** | September 2026 |
 
@@ -70,8 +70,9 @@ PHASE 6: Validated Self-Learning / Research Evaluation
 │                    │ (v2.3.0) │ roadmap B3–B11 matching the     │ B3 next; Sion aligns frontend  │
 │                    │          │ 6-phase product progression.    │ tracks C1–C17 in parallel.     │
 ├────────────────────┼──────────┼─────────────────────────────────┼────────────────────────────────┤
-│ AI_INSTRUCTIONS.md │ ACTIVE   │ v2.0.0: Rules A–J, deepfake-    │ Mandatory operating directive  │
-│                    │ (v2.0.0) │ first directives, Git safety.   │ for all AI coding workflows.   │
+│ AI_INSTRUCTIONS.md │ ACTIVE   │ v3.0.0: Strict coding agent     │ Mandatory operating directive  │
+│                    │ (v3.0.0) │ rules, implementation discipline│ and binding engineering        │
+│                    │          │ 7-dim audit, testing, Rules A-J.│ contract for all AI workflows. │
 ├────────────────────┼──────────┼─────────────────────────────────┼────────────────────────────────┤
 │ README.md          │ ACTIVE   │ v2.3.0: Offline MVP first,      │ Public repository landing page │
 │                    │ (v2.3.0) │ research datasets, status of    │ with truthful maturity state   │
@@ -104,7 +105,7 @@ Analyze Cross-Dataset Generalization & Avoid Data Leakage
 
 | Dataset | Designated Role | Current Status | Notes |
 | :--- | :--- | :--- | :--- |
-| **ASVspoof 2019 LA** | **Initial Baseline Training & Development** | **Download Pending** | Logical Access track. Partitioned into strict train, dev/validation, and held-out evaluation splits. |
+| **ASVspoof 2019 LA** | **Initial Baseline Training & Development** | **VERIFIED & INTEGRATED** | Logical Access track. 121,461 CM utterances verified across train (25,380), dev (24,844), and eval (71,237). 7.12 GB corpus at `datasets/LA/LA/`. Streaming JSONL manifests built and partition governance strictly enforced. |
 | **ASVspoof 2021 DF** | **Cross-Dataset Generalization Evaluation** | **Download Pending** | Held out strictly for cross-dataset evaluation of unseen vocoders/compression. **NOT** the current training dataset. |
 | **ASVspoof 2021 LA** | **Communication Robustness Evaluation** | **Download Pending** | Evaluates robustness under telephony/channel conditions relevant to eventual live-call scenarios. **NOT** the current training dataset. |
 | **Future Datasets** (e.g., WaveFake) | **Independent Generalization Evaluation** | **Future Scope** | Future out-of-domain evaluation; not to be added merely for the sake of adding datasets. |
@@ -193,6 +194,19 @@ Promote ONLY if Validated (Otherwise discard & rollback)
 * **Phase A0: Repository Baselining & Shared Foundation** — **[COMPLETE]**
 * **Phase B1: FastAPI Modularization** — **[COMPLETE]** (Single-responsibility packages in `backend/`).
 * **Phase B2: WebSocket Audio Streaming Stability** — **[COMPLETE]** (Frame validation, bounded tasks, disconnect purge).
+* **Phase B3: Offline Dataset Verification & Audio Preprocessing Foundation** — **[COMPLETE]**
+  - **Git Safety**: Ensured `datasets/` and `data/` are strictly ignored by `.gitignore`. Zero raw audio or manifest files tracked by Git.
+  - **Dataset Verification**: Verified 122,299 audio files (7,288.5 MB, 100% 16 kHz Mono FLAC). Validated 121,461 CM utterances across train (25,380), dev (24,844), and eval (71,237) with 0 missing audio files. Confirmed strict speaker and utterance mutual exclusivity across splits. Extra dev (142) and eval (696) files verified as ASV speaker enrollment audio (`.trn.txt`). Saved structured report to `data/reports/asvspoof2019_la_validation.json`.
+  - **Protocol Reader & Governance**: Implemented `ProtocolReader` (`protocol_reader.py`) enforcing partition governance: TRAIN=training only, DEV=validation/tuning only, EVAL=held-out evaluation only (never used in training or tuning).
+  - **Manifest Generation**: Generated streaming JSONL manifest indexes (`manifest.py`, `build_manifests.py`):
+    - `asvspoof2019_la_train.jsonl`: 25,380 records (7,279.6 KB)
+    - `asvspoof2019_la_dev.jsonl`: 24,844 records (7,028.9 KB)
+    - `asvspoof2019_la_eval.jsonl`: 71,237 records (20,292.6 KB)
+    - Total: 121,461 records
+  - **Audio Preprocessing**: Implemented `AudioPreprocessor` (`preprocessor.py`) with non-destructive Float32 [-1.0, 1.0] baseline, preserving native duration by default. Normalization, fixed windowing, and silence trimming are explicitly configurable and disabled by default.
+  - **Dataset Loader**: Implemented PyTorch `ASVSpoofDataset` (`loader.py`) with instant $O(1)$ byte-offset streaming indexing and flexible batch collation (`asvspoof_collate_fn`).
+  - **Automated Tests**: 35/35 passing tests in `backend/tests/` (7 stream, 3 api, 6 preprocessor, 4 loader, 3 manifest, 7 protocol, 5 verifier).
+  - **Next Step**: Phase B4: Base Offline Speech Deepfake Detector (Candidate Baselines).
 
 ---
 
@@ -226,13 +240,23 @@ Promote ONLY if Validated (Otherwise discard & rollback)
      - B9: Optional speaker verification (ECAPA).
      - B10: PITCH challenge + security/transaction action.
      - B11: Validated self-learning / model improvement pipeline.
-  8. **Next Milestone**: **Phase B3 — Offline Dataset Verification & Audio Preprocessing Foundation**.
+
+---
+
+### [2026-09-15] Engineering Directive Update: Strict AI Agent Discipline (v3.0.0)
+* **Track**: ENGINEERING GOVERNANCE & AI INSTRUCTIONS
+* **Status**: **ACTIVE & LOCKED**
+* **Changes Recorded**:
+  1. Upgraded `AI_INSTRUCTIONS.md` to `3.0.0-STRICT-ENGINEERING-CONTRACT`.
+  2. Mandated 7-document pre-flight reading before every implementation task.
+  3. Codified capability-oriented naming conventions, minimal comments policy ("WHY over WHAT"), and minimal implementation principle.
+  4. Established mandatory incremental testing, 7-dimension post-implementation audit, and absolute Git safety rules.
 
 ---
 
 ## 8. Immediate Next Implementation Milestone
 
-* **Phase B3 — Offline Dataset Verification & Audio Preprocessing Foundation** (Backend Track / Shub).
-  - Verify and inspect dataset directory structures and manifest parsers for ASVspoof 2019 LA.
-  - Implement audio preprocessing foundation: 16kHz resampling, normalization, sliding window segmenter, and VAD audio preparation.
-  - Zero application code written during this documentation synchronization phase.
+* **Phase B4 — Base Offline Speech Deepfake Detector (Candidate Baselines)** (Backend Track / Shub).
+  - Prepare candidate model inference harnesses for ResNet acoustic baseline, RawNet2, and AASIST.
+  - Wire offline inference pipeline to accept preprocessed audio chunks from Phase B3.
+  - Validate forward passes on mock/test audio with continuous probability outputs.
