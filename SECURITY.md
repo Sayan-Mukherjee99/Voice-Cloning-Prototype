@@ -2,8 +2,8 @@
 
 | Document Attribute | Specification Detail |
 | :--- | :--- |
-| **Document Version** | 2.0.0-SEC-SPEC |
-| **Status** | Approved Security Architecture Baseline / Deepfake-First Realignment |
+| **Document Version** | 2.3.0-SEC-SPEC |
+| **Status** | Approved Security Architecture Baseline / Offline Deepfake Direction Realignment |
 | **Security Classification** | Enterprise Confidential / Security Architecture Specification |
 | **Associated Documents** | `PRD.md` (Product Requirements), `TRD.md` (Technical Requirements), `AI_ARCHITECTURE.md` |
 | **Reference Repository** | `Sayan-Mukherjee99/Voice-Cloning-Prototype` |
@@ -14,32 +14,42 @@
 ## 1. Executive Summary & Security Charter
 
 ### 1.1 Core Security Objective
-**VaaniShield** is designed to inspect real-time audio streams, detect synthetic, neural, and voice-cloned impersonation attacks, and deterministically protect sensitive transactions. 
+**VaaniShield** is designed to inspect audio, detect synthetic, neural, and voice-cloned impersonation attacks, and protect sensitive operations. 
 
 The primary security mandate is:
 > **The defense platform itself must not introduce a new attack surface, become an attack vector against the enterprise, or compromise caller privacy.**
 
 A vulnerability in VaaniShield could allow an adversary to:
-1. Blind the fraud detection engine to execute multi-crore unauthorized wire transfers.
+1. Bypass deepfake detection to execute unauthorized wire transfers or financial fraud.
 2. Poison the self-learning training registry to establish persistent adversarial backdoors.
 3. Exfiltrate proprietary voice biometric embeddings or sensitive call telemetry.
-4. Exploit audio processing memory buffers to achieve Remote Code Execution (RCE) inside the security perimeter.
-5. Manipulate threat thresholds to induce widespread Denial of Service (False Alarm Flooding) on legitimate operations.
+4. Exploit audio processing memory buffers to achieve code execution inside the security perimeter.
+5. Manipulate threat thresholds to induce Denial of Service (False Alarm Flooding) on legitimate business operations.
 
-### 1.2 Probabilistic Risk vs. Absolute Identity
+### 1.2 Probabilistic Detection & Error Posture
 To prevent dangerous security assumptions, the system strictly enforces this foundational principle:
-> **"Voice verified" never implies a person is definitely authentic.**
+> **Deepfake detection is probabilistic, not deterministic proof of authenticity.**
 
-Voice integrity detection is probabilistic and signals acoustic authenticity, not human authorization:
-* A low voice integrity risk score indicates the audio is consistent with organic biological speech and an enrolled baseline (Mode B). It cannot verify if the caller is speaking under physical duress, social engineering coercion, or in collusion with fraudsters.
-* High speaker similarity in Mode B does NOT prove human authenticity; an AI clone intentionally mimics the target speaker.
-* The system outputs a **probabilistic threat score ($0.0–100.0$)**, which must be coupled with contextual transaction limits, out-of-band approvals, and multi-factor gates.
+* **No Guaranteed Absolute Detection**: The system estimates the statistical likelihood that speech exhibits characteristics associated with synthetic or spoofed speech. A low risk score indicates the audio is consistent with organic biological speech; it does not constitute absolute proof of authenticity.
+* **Possibility of False Positives & False Negatives**:
+  * **False Positives (False Rejection / FRR)**: Highly expressive, hoarse, or accented human voices may trigger elevated synthetic scores.
+  * **False Negatives (False Acceptance / FAR)**: Novel or low-distortion generative models operating over high-fidelity channels may evade detection thresholds.
+* **Context-Aware Security Actions**: Security actions (warnings, step-up challenges, transaction holds) must consider risk thresholds and contextual factors (transaction amount, beneficiary risk, user history) rather than relying blindly on a single isolated number.
+* **Defense-in-Depth (No Single-Model Reliance)**: High-risk decisions must **never** rely blindly on a single model output. VaaniShield combines waveform-level models, spectral vocoder cues, biomechanical prosody, interactive challenge-response (PITCH), and transaction rules.
 
-### 1.3 Regulatory & Privacy Positioning (DPDP Act 2023)
-VaaniShield is **architected to support compliance** with privacy frameworks, including India's **Digital Personal Data Protection (DPDP) Act 2023** and global data privacy standards (e.g., GDPR Article 9 regarding biometric data processing):
-* Strict **zero raw audio retention at rest**.
-* Processing occurs strictly within **ephemeral in-memory circular buffers** (bounded by a $15$-second TTL).
-* Storage is limited to derived, mathematically non-invertible feature vectors.
+### 1.3 Speaker Similarity vs. Human Authenticity
+> [!CRITICAL]
+> **Speaker similarity does NOT prove authenticity.**
+> An AI-generated voice clone is specifically engineered to sound like the victim. 
+* High speaker similarity in Mode B (ECAPA-TDNN) confirms only that the speech acoustics resemble an enrolled reference profile.
+* If speaker similarity is HIGH ($>0.85$) while deepfake risk is HIGH ($>75.0$), the system identifies a **Targeted Cloned Voice Attack (RED Alert)**.
+* Speaker verification is an optional contextual modifier, never the primary detector.
+
+### 1.4 Regulatory & Privacy Positioning (DPDP Act 2023)
+VaaniShield is **architected to support compliance** with privacy frameworks, including India's **Digital Personal Data Protection (DPDP) Act 2023**:
+* **Raw Audio Non-Persistent by Default**: Raw audio files (`.wav`, `.pcm`) are non-persistent by default.
+* **Ephemeral In-Memory Processing**: Transient streaming frames reside strictly within volatile RAM in Redis circular ring buffers bounded by a **15-second TTL** (`EXPIRE 15`), purged instantly on disconnect.
+* **Derived Telemetry Only**: Audit logs store non-invertible, mathematically derived feature scalars ($F_0$, jitter, shimmer, mel-band energies, risk scores), never raw voice recordings.
 
 ---
 
@@ -73,17 +83,15 @@ VaaniShield is **architected to support compliance** with privacy frameworks, in
 ```
 
 ### 2.1 Attack Taxonomy Detail
-1. **Adversarial Generated Speech**: Audio produced by zero-shot diffusion or vocoders with imperceptible acoustic perturbations designed to cross decision boundaries without being flagged.
-2. **Replay Attacks**: Playing back a pre-recorded authentic human voice through a secondary acoustic transducer (loudspeaker) into the microphone stream.
-3. **Training Data & Feedback Poisoning**: Adversaries submitting false feedback ("Mark as Genuine" on AI clones) to manipulate future model retraining.
+1. **Adversarial Generated Speech**: Audio produced by zero-shot diffusion or vocoders with subtle perturbations designed to stay below detection thresholds.
+2. **Replay Attacks**: Playing back authentic pre-recorded human speech through a secondary acoustic transducer into the microphone.
+3. **Training Data & Feedback Poisoning**: Adversaries submitting false feedback ("Mark as Genuine" on synthetic speech) to compromise future model updates.
 4. **Model Replacement & Supply-Chain Attacks**: Tampering with ONNX model files or container base images to insert backdoors.
-5. **Threshold & Boundary Manipulation**: Probing API endpoints to discover exact numeric gating thresholds ($40.0, 75.0$) and designing evasion audio just below trigger points.
+5. **Threshold & Boundary Manipulation**: Probing API endpoints to discover exact numeric gating thresholds ($40.0, 75.0$) and modulating synthesis to operate just below trigger points.
 
 ---
 
 ## 3. Data Privacy Architecture & Data Classification (DPDP Act 2023)
-
-To ensure total transparency and data governance, the platform establishes five distinct data classifications:
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
@@ -110,7 +118,7 @@ To ensure total transparency and data governance, the platform establishes five 
 
 > [!CAUTION]
 > **Prohibition of Silent Audio Harvesting**:
-> The system must **never silently save or persist raw voice audio** from mass users or unknown callers for training purposes. Training datasets must originate strictly from controlled synthetic generation, public research corpora, or explicit opt-in agreements.
+> The system must **never silently save or persist raw voice audio** from users or unknown callers for training purposes. Training datasets must originate strictly from controlled synthetic generation, public research corpora, or explicit opt-in enterprise agreements.
 
 ---
 
@@ -168,7 +176,7 @@ Incoming Call Feedback
 ### 5.1 Safe Logging Rules
 1. **Zero Raw Audio Logging**: Under no circumstances shall raw PCM audio, base64 chunks, spectrogram matrices, or WAV buffers be written to log files.
 2. **PII Masking**: Customer phone numbers, account numbers, and VPAs must be masked in logs (e.g., `98****1234`, `cust****@oksbi`).
-3. **Structured Format**: Logs must emit structured JSON via `structlog`:
+3. **Structured JSON Logging**: Logs must emit structured JSON via `structlog`:
 
 ```json
 {
@@ -179,8 +187,8 @@ Incoming Call Feedback
   "session_id": "call-secops-842",
   "threat_level": "RED",
   "composite_risk_score": 84.5,
-  "anti_spoof_score": 88.0,
-  "trigger_signal": "aasist_synthetic_waveform_detected",
+  "deepfake_model_score": 88.0,
+  "trigger_signal": "synthetic_waveform_detected",
   "client_ip": "10.0.12.45"
 }
 ```
@@ -205,7 +213,7 @@ Incoming Call Feedback
 ├───────────────────────┬────────────────────────────┬─────────────────────────────────────────────┤
 │ Subsystem Failure     │ Technical Failure State    │ Deterministic Security System Posture       │
 ├───────────────────────┼────────────────────────────┼─────────────────────────────────────────────┤
-│ Anti-Spoof ONNX Fail  │ Model session unavailable  │ FAIL-SECURE: Elevate default risk to AMBER  │
+│ Deepfake ONNX Fail    │ Model session unavailable  │ FAIL-SECURE: Elevate default risk to AMBER  │
 │                       │ or weights missing         │ (50.0). Trigger mandatory PITCH challenge.  │
 ├───────────────────────┼────────────────────────────┼─────────────────────────────────────────────┤
 │ Parselmouth Crash     │ Threadpool timeout (>60ms) │ Fall back to Scipy pitch estimator. Log     │

@@ -1,41 +1,40 @@
 # Technical Requirements Document (TRD)
 
-# VaaniShield: AI-Powered Real-Time Voice Integrity & Impersonation Detection Platform
+# VaaniShield: AI-Powered Speech Deepfake Detection & Voice Integrity Platform
 
 | Document Attribute | Specification Detail |
 | :--- | :--- |
-| **Document Version** | 2.0.0-TECH-SPEC |
+| **Document Version** | 2.3.0-TECH-SPEC |
 | **Status** | Engineering Architectural Baseline / Deepfake-First Realignment |
-| **System Architecture ID** | ARCH-VAANI-2026-V2 |
-| **Associated Product Document**| `PRD.md` (v2.0.0-PROD-SPEC) |
+| **System Architecture ID** | ARCH-VAANI-2026-V2.3 |
+| **Associated Product Document**| `PRD.md` (v2.3.0-PROD-SPEC) |
 | **Reference Repository** | `Sayan-Mukherjee99/Voice-Cloning-Prototype` |
-| **Core Architecture** | Real-Time Speaker-Independent Voice Deepfake & Anti-Spoof Detection Engine |
-| **Target Execution Tier** | Phase 1 (Hackathon MVP / Demo-Grade), Phase 2 (Enterprise Pilot), Phase 3 (Carrier Infrastructure) |
+| **Core Architecture** | Speaker-Independent Speech Deepfake & Anti-Spoof Detection Engine |
+| **Product Progression** | Phase 1 (Offline MVP) → Phase 2 (Streaming) → Phase 3 (Fusion) → Phase 4 (Identity) → Phase 5 (PITCH + Action) → Phase 6 (Self-Learning) |
 | **Project Ownership** | Person A: **Shub** (Backend / AI) \| Person B: **Sion** (Frontend) |
 
 ---
 
 ## 1. Document Overview & Architectural Context
 
-This Technical Requirements Document (TRD) establishes the technical blueprint, component specifications, streaming contracts, signal processing pipelines, machine learning serving topologies, database schemas, and learning architectures for **VaaniShield**.
+This Technical Requirements Document (TRD) establishes the technical specification, component boundaries, dataflows, candidate model evaluation framework, dataset strategy, database schemas, and learning lifecycle for **VaaniShield**.
 
-The primary technical mandate of VaaniShield is:
-> **Ingest streaming audio in real time and classify whether the speech contains evidence of synthetic, cloned, converted, or replayed manipulation — operating independently of speaker enrollment.**
+The primary technical objective is:
+> **Ingest audio and classify whether the speech contains evidence of synthetic, cloned, converted, or spoofed generation — operating independently of speaker enrollment.**
 
-Speaker verification is refactored into an **optional secondary capability** rather than the primary gatekeeper.
+Speaker verification is refactored strictly into an **optional supporting identity branch**, not the primary detector.
 
 ### 1.1 Architectural Guarantees
-1. **Speaker-Independent Detection by Default (Mode A)**: Analyzes incoming audio from unknown, first-time, or un-enrolled callers with zero prior voiceprint database requirements.
-2. **Sub-100ms Streaming Turnaround (p95 TARGET)**: The streaming analysis loop (ingestion, frame validation, VAD, preprocessing, anti-spoof inference, prosodic modeling, and Asymmetric EMA smoothing) must execute in under 100 ms per 768 ms analysis hop on standard edge CPU hardware.
-3. **Sub-35ms Pre-Transaction Decision SLA (p99 TARGET)**: The synchronous transaction authorization gate (`POST /v1/transaction/evaluate-authorization`) returns a deterministic decision (`APPROVED` vs. `BLOCKED` with HTTP 403) in under 35 ms.
-4. **Zero Raw Voice Storage at Rest**: In strict compliance with India's **Digital Personal Data Protection (DPDP) Act 2023**, raw audio bytes reside strictly in volatile Redis ring buffers bounded by a 15-second Time-To-Live (TTL). No persistent audio files or blobs touch disk or database tables.
-5. **Zero-Cost / Free-First Local Architecture**: The core system runs entirely on open-source runtimes (Python, FastAPI, ONNX Runtime, SciPy, Librosa, Redis, SQLite) and the Supabase Free Tier. No mandatory paid commercial APIs (LLMs, speech APIs, cloud GPUs) are required.
+1. **Speaker-Independent Detection by Default (Mode A)**: Operates on arbitrary, unknown, or un-enrolled speakers without requiring reference voiceprints.
+2. **Offline MVP Foundation**: Ingests uploaded audio files (WAV, MP3) and generates comprehensive deepfake risk scores, categorical classifications (`REAL`, `SUSPICIOUS`, `AI-GENERATED`), and acoustic evidence.
+3. **Streaming Turnaround (Phase 2 Adaptation)**: Adapts core detection to streaming audio with sub-100ms processing turnaround per 768ms hop on standard edge CPUs.
+4. **Sub-35ms Pre-Transaction Decision SLA**: The synchronous transaction authorization gate (`POST /v1/transaction/evaluate-authorization`) returns a deterministic verdict (`APPROVED` vs. `BLOCKED` with HTTP 403) in under 35 ms.
+5. **Zero Raw Voice Storage at Rest**: In compliance with India's **DPDP Act 2023**, raw audio is non-persistent by default. Transient streaming audio resides only in volatile Redis ring buffers (15-second TTL). No raw audio blobs touch permanent disk or database storage.
+6. **Zero-Cost / Free-First Local Stack**: Runs completely on open-source runtimes (Python, FastAPI, ONNX Runtime, SciPy, Librosa, Redis, SQLite) and the Supabase Free Tier. No mandatory paid commercial APIs.
 
 ---
 
 ## 2. Architectural Audit & Implementation Maturity Matrix
-
-All subsystem states within the repository are classified according to the standardized status taxonomy:
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
@@ -55,231 +54,197 @@ All subsystem states within the repository are classified according to the stand
 │ PARTIALLY            │ Audio Preprocessing     │ Librosa / Scipy mel-spectrogram extraction      │
 │ IMPLEMENTED          │ Backend Modularization  │ Modular package layout in backend/ai, api, db   │
 ├──────────────────────┼─────────────────────────┼─────────────────────────────────────────────────┤
-│ MOCK / FALLBACK      │ Neural Anti-Spoofing    │ Heuristic fallback when resnet18.onnx is absent │
+│ MOCK / FALLBACK      │ Neural Anti-Spoofing    │ Heuristic fallback when model ONNX is absent    │
 │                      │ Silero VAD              │ RMS energy thresholding when ONNX is absent     │
 │                      │ ECAPA-TDNN Embedding    │ Hash-seeded random unit vectors when absent     │
 │                      │ Telemetry Simulator     │ useSimulator generating synthetic UI cycles     │
 │                      │ Synthetic Audio Inject  │ useAudioStreamer generating synthetic sines     │
 │                      │ PITCH Challenge Logic   │ Static UI drawer; lacks backend acoustic check  │
 ├──────────────────────┼─────────────────────────┼─────────────────────────────────────────────────┤
-│ PLANNED / RESEARCH   │ Primary Anti-Spoof Model│ Pretrained AASIST / RawNet2 ONNX integration    │
-│                      │ Closed-Loop PITCH Check │ Backend response latency and intonation check   │
-│                      │ Telephony Transcoding   │ AMR-NB/WB bandpass simulation and filter        │
+│ RESEARCH / PLANNED   │ Offline Deepfake MVP    │ Offline WAV/MP3 ingestion & baseline detector   │
+│                      │ Candidate Baselines     │ ResNet, RawNet2, AASIST model experiments       │
+│                      │ Model Metrics Suite     │ EER, ROC-AUC, FAR, FRR, confusion matrix        │
+│                      │ Cross-Dataset Eval      │ ASVspoof 2021 DF generalization testing         │
+│                      │ Multi-Signal Fusion     │ Weighted fusion of waveform, spectral, prosody  │
 ├──────────────────────┼─────────────────────────┼─────────────────────────────────────────────────┤
 │ PROPOSED             │ Dual Database Topology  │ Supabase Free (PostgreSQL/vector) + SQLite log  │
 │                      │ Self-Learning Registry  │ SQLite metadata logging with validation gates   │
 │                      │ Anti-Poisoning Controls │ Quarantine pool and holdout evaluation runner   │
 ├──────────────────────┼─────────────────────────┼─────────────────────────────────────────────────┤
-│ EXPERIMENTAL         │ Temporal Sequence Model │ Lightweight Transformer / GRU over hop windows  │
-├──────────────────────┼─────────────────────────┼─────────────────────────────────────────────────┤
 │ UNVERIFIED           │ Telephony Codec EER     │ Anti-spoof EER under real 8kHz AMR-NB cell calls│
 │                      │ Multi-Accent Resiliency │ False positive rates on regional Indian accents │
-├──────────────────────┼─────────────────────────┼─────────────────────────────────────────────────┤
-│ DEFERRED             │ Foundation Audio Models │ Heavy Wav2Vec2 / Whisper models (violates SLA)  │
-│                      │ Carrier SIPREC SBC Fork │ Phase 3 enterprise telecom integration          │
 └──────────────────────┴─────────────────────────┴─────────────────────────────────────────────────┘
 ```
 
 > [!IMPORTANT]
 > **Architecture Ready $\neq$ Validated Model Ready.**
-> The current repository contains the pipeline scaffolding, endpoints, and mock fallbacks, but model weights in `models/` are unpopulated. Real deepfake detection capability is PLANNED and will be marked complete only after AASIST/RawNet2 weights are integrated and evaluated.
+> Scaffolding, endpoints, and mock fallbacks exist, but model weights in `models/` remain unpopulated. Real deepfake detection capability is PLANNED and will be marked validated only after candidate models are trained/benchmarked on local research datasets in Phase B4 and B5.
 
 ---
 
-## 3. System Architecture & Dual-Database Topology
+## 3. Structural Decomposition: Five Core Subsystems
 
-### 3.1 Logical Architecture
-
-```
-┌─────────────────────────────────────────────────────────────────────────────────────────────────┐
-│                                      PRESENTATION LAYER                                         │
-│  Next.js 16 (React 19) • Tailwind CSS • Framer Motion • HTML5 Canvas Spectrogram • Zustand Store│
-│  [Audio Streamer Hook]  [Live Telemetry Hook]  [Mock Banking Gate]  [PITCH Challenge Drawer]    │
-└─────────────────────────────────┬───────────────────────────────┬───────────────────────────────┘
-                                  │ Binary 16kHz PCM              │ REST / JSON
-                                  ▼                               ▼
-┌─────────────────────────────────────────────────────────────────────────────────────────────────┐
-│                                      INGESTION & API LAYER                                      │
-│  FastAPI Gateway (Uvicorn Async Workers) • HTTP/2 & WebSocket (RFC 6455)                        │
-│  ├── WS /v1/stream/call/{session_id} (Streaming PCM Ingestion & Telemetry Egress)               │
-│  ├── POST /v1/transaction/evaluate-authorization (Synchronous Pre-Transaction Gating)           │
-│  ├── POST /v1/enroll (Optional Speaker Voiceprint Registration - Mode B)                        │
-│  └── GET /health (Readiness / Liveness Diagnostics)                                             │
-└─────────────────────────────────┬───────────────────────────────┬───────────────────────────────┘
-                                  │ Sliding Frames                │ Session State
-                                  ▼                               ▼
-┌─────────────────────────────────────────────────────────────────────────────────────────────────┐
-│                                   IN-MEMORY EPHEMERAL BUFFER                                    │
-│  Redis 7.2 Circular Ring Buffer (LPUSH + LTRIM) • 15-Second TTL (DPDP Act 2023)                 │
-│  [In-Memory Thread-Safe Deque Fallback: collections.deque(maxlen=24)]                           │
-└─────────────────────────────────┬───────────────────────────────────────────────────────────────┘
-                                  │ 1,536ms Audio Window (768ms Hop Cadence)
-                                  ▼
-┌─────────────────────────────────────────────────────────────────────────────────────────────────┐
-│                                MULTI-TIER AI INFERENCE PIPELINE                                 │
-│                                                                                                 │
-│  [TIER 0: VAD] ────────► Silero VAD (ONNX Quantized) ──► Silence Strip (<15% speech discard)    │
-│                                                                                                 │
-│  [PRIMARY ENGINE] ─────► Speaker-Independent Anti-Spoof (AASIST / RawNet2 Pretrained ONNX)     │
-│                          Classifies Bona Fide Human vs. Synthetic/Cloned/Converted/Replayed     │
-│                                                                                                 │
-│  [AUXILIARY SIGNALS] ──► 80-bin Log-Mel Spectrogram ──► ResNet-18 Quantized Vocoder ONNX (<25ms)│
-│                     └──► Biomechanical Prosody (Praat Parselmouth / SciPy: F0, Jitter, Shimmer) │
-│                                                                                                 │
-│  [OPTIONAL MODE B] ────► ECAPA-TDNN 192-dim Embedding ONNX ──► Cosine Sim vs. Supabase pgvector│
-│                          (Runs only when speaker_id provided; High Sim != Genuine)              │
-│                                                                                                 │
-│  [ACTIVE DEFENSE] ─────► PITCH Dynamic Phonetic Challenge ──► Conversational Latency & Modulation│
-└─────────────────────────────────┬───────────────────────────────────────────────────────────────┘
-                                  │ Raw Detection Scores
-                                  ▼
-┌─────────────────────────────────────────────────────────────────────────────────────────────────┐
-│                                RISK FUSION & STATE MACHINE ENGINE                               │
-│  Multi-Signal Weighted Fusion ──► Asymmetric EMA Filter (α_up=0.65, α_down=0.25)                │
-│  Threat State Machine: GREEN (<40.0) ──► AMBER (40.0-74.9) ──► RED (>=75.0) with Hysteresis    │
-└─────────────────────────────────┬───────────────────────────────┬───────────────────────────────┘
-                                  │ Telemetry JSON                │ Hard 403 / Audit
-                                  ▼                               ▼
-┌─────────────────────────────────────────────────┬───────────────────────────────────────────────┐
-│        SUPABASE APPLICATION DATABASE            │          SQLITE LEARNING REGISTRY             │
-│  (Managed PostgreSQL 16 + pgvector - Free Tier) │          (Local File: vaani_learning.db)      │
-│  • call_sessions (Active session states)        │  • learning_events (Per-hop predictions)      │
-│  • enrolled_voiceprints (Mode B vectors)        │  • feedback_records (Operator ground truth)   │
-│  • transaction_evaluations (Audit ledger)       │  • training_candidates (Quarantine & Provenance│
-│  • model_metadata & active version tags         │  • holdout_evaluations & rollback ledger      │
-└─────────────────────────────────────────────────┴───────────────────────────────────────────────┘
-```
-
-### 3.2 Dual-Database Pattern (Supabase Free + SQLite)
-To strictly enforce the **Zero-Cost / Free-First** requirement, storage is partitioned:
-1. **Supabase (PostgreSQL 16 + pgvector)**:
-   - Operates within the **Supabase Free Tier** ($0/month, 500 MB DB, 1 GB storage, up to 50k MAU).
-   - Houses persistent application state: active sessions, transaction evaluations, operator auth, and optional enrolled speaker vectors.
-   - Evaluates vector cosine distance via `pgvector` IVFFlat indexing:
-     ```sql
-     SELECT speaker_id, 1 - (embedding <=> $1) AS similarity 
-     FROM enrolled_voiceprints 
-     WHERE speaker_id = $2;
-     ```
-2. **SQLite (`vaani_learning.db`)**:
-   - Embedded, zero-configuration local relational database.
-   - High-write throughput for real-time model telemetry, feature hashes, operator feedback, quarantine logs, and candidate retraining batches.
-   - Completely isolated from runtime operational traffic; zero server cost.
-
----
-
-## 4. End-to-End Streaming & Dataflow Architecture
-
-### 4.1 Step-by-Step Streaming Pipeline
+The technical architecture strictly decouples into five functional subsystems:
 
 ```text
-Live Audio Stream (16kHz 16-bit Mono Linear PCM)
-   ↓
+┌───────────────────────────────────────────────────────────────────────────────────┐
+│                           1. PRIMARY DETECTOR SUBSYSTEM                           │
+│  Speaker-Independent Deepfake Detection (Waveform / Acoustic Feature Space)       │
+│  Candidate Models: ResNet Baseline, RawNet2, AASIST / AASIST-L                    │
+└─────────────────────────────────────────┬─────────────────────────────────────────┘
+                                          │
+        ┌─────────────────────────────────┼─────────────────────────────────┐
+        ▼                                 ▼                                 ▼
+┌───────────────────────────────┐ ┌───────────────────────────────┐ ┌───────────────────────────────┐
+│     2. SUPPORTING SIGNALS     │ │  3. OPTIONAL IDENTITY BRANCH  │ │        4. RISK LAYER          │
+│ • Acoustic/Spectral (CNN Mel) │ │ • ECAPA-TDNN 192-dim vector   │ │ • Temporal Smoothing (EMA)    │
+│ • Prosody (F0, Jitter, Shimmer│ │ • Supabase pgvector Cosine Sim│ │ • Threat State Machine        │
+│ • Temporal Continuity         │ │ • High Sim != Authentic Human │ │ • REAL / SUSPICIOUS / SYNTH   │
+└───────────────┬───────────────┘ └───────────────┬───────────────┘ └───────────────┬───────────────┘
+                │                                 │                                 │
+                └─────────────────────────────────┼─────────────────────────────────┘
+                                                  ▼
+                                ┌───────────────────────────────────┐
+                                │        5. SECURITY ACTION         │
+                                │ • Active PITCH Challenge Protocol │
+                                │ • Pre-Transaction Gate (HTTP 403) │
+                                └───────────────────────────────────┘
+```
+
+### 3.1 Subsystem 1: Primary Detector (Speaker-Independent Deepfake Detection)
+* **Role**: Primary engine answering: *"Does this audio exhibit characteristics of synthetic or spoofed speech?"*
+* **Operation**: Analyzes audio representations directly without requiring enrolled speaker profiles.
+* **Candidate Model Architectures**:
+  1. *ResNet Acoustic Baseline*: 2D CNN operating over 80-bin log-mel filterbanks ($25\text{ ms}$ window, $10\text{ ms}$ hop).
+  2. *RawNet2*: Time-distributed convolutional layers and gated recurrent units (GRUs) processing raw 16kHz waveforms.
+  3. *AASIST / AASIST-L*: Integrated Spectro-Temporal Graph Attention Network modeling raw waveform spectral and temporal graphs.
+* **Intellectual Honesty Mandate**: No candidate model is claimed as the final production model. External benchmarks are external reference literature only.
+
+### 3.2 Subsystem 2: Supporting Signals (Acoustic & Prosodic Features)
+* **Acoustic / Spectral Cues**: High-frequency spectral roll-off, vocoder checkerboard upsampling artifacts, and abnormal spectral centroid variance.
+* **Biomechanical Prosody (Praat Parselmouth)**:
+  * Fundamental pitch ($F_0$) trajectory, mean, and variance ($60–400\text{ Hz}$).
+  * Cycle-to-cycle pitch perturbation (Jitter RAP; natural range $0.4\%–1.5\%$).
+  * Cycle-to-cycle amplitude perturbation (Shimmer APQ5; natural range $1.0\%–4.5\%$).
+  * Harmonics-to-Noise Ratio (HNR dB; voice periodicity indicator).
+
+### 3.3 Subsystem 3: Optional Identity Branch (ECAPA-TDNN)
+* **Role**: Optional identity consistency checking for enrolled callers in Mode B.
+* **Operation**: Extracts 192-dimensional embeddings and executes cosine distance queries against Supabase `pgvector`.
+* **Critical Security Principle**:
+  ```text
+  ECAPA Similarity HIGH != Authentic Human Speech!
+  ```
+  Targeted voice clones match enrolled identities. High similarity coupled with high synthetic risk triggers a **RED (Targeted Clone Attack)** alert.
+
+### 3.4 Subsystem 4: Risk Layer (Temporal Smoothing & State Machine)
+* **Instantaneous Fusion**: Fuses primary detector output with supporting acoustic and prosodic evidence into composite score $R_{\text{raw}} \in [0.0, 100.0]$.
+* **Asymmetric EMA Filter**:
+  $$R_{\text{EMA}}^{(t)} = \alpha R_{\text{raw}}^{(t)} + (1 - \alpha) R_{\text{EMA}}^{(t-1)}$$
+  $\alpha_{\text{escalate}} = 0.65$ (fast attack surge), $\alpha_{\text{deescalate}} = 0.25$ (deliberate safe recovery).
+* **State Categorization**:
+  * GREEN / REAL ($R_{\text{EMA}} < 40.0$)
+  * AMBER / SUSPICIOUS ($40.0 \le R_{\text{EMA}} < 75.0$)
+  * RED / AI-GENERATED ($R_{\text{EMA}} \ge 75.0$)
+
+### 3.5 Subsystem 5: Security Action (PITCH & Pre-Transaction Gating)
+* **Active Defense (PITCH)**: Dynamic phonetic challenge testing interactive synthesis latency ($>1.5\text{ s}$) and vocal tract articulation ($\Delta F_0 > 45\text{ Hz}$).
+* **Pre-Transaction Gate**: Synchronous API (`POST /v1/transaction/evaluate-authorization`) halting high-stakes transfers with HTTP 403 on RED state.
+
+---
+
+## 4. End-to-End Dataflow Pipelines
+
+### 4.1 Offline Analysis Pipeline (Primary MVP)
+
+```text
+Uploaded File (WAV / MP3)
+    ↓
+Audio Validation & Decoding (Librosa / SoundFile -> Float32 [-1, 1], Mono, 16kHz)
+    ↓
+Preprocessing (DC Offset Subtraction, RMS Peak Normalization)
+    ↓
+Voice Activity Detection (Silero VAD ONNX; strip non-speech frames)
+    ↓
+Sliding Window Segmentation (1,536ms window, 768ms hop)
+    ↓
+Speaker-Independent Deepfake Detector (Candidate Model Forward Pass)
+    ↓
+Acoustic & Prosodic Analysis (Mel Spectrogram + Parselmouth F0/Jitter/Shimmer)
+    ↓
+Window-Level Score Aggregation & Confidence Weighting
+    ↓
+Forensic Evidence Synthesis & Verdict (REAL / SUSPICIOUS / AI-GENERATED)
+    ↓
+JSON Response Egress
+```
+
+### 4.2 Real-Time Streaming Pipeline (Phase 2 Adaptation)
+
+```text
+Microphone / Audio Client
+    ↓
 WebSocket Ingestion (/v1/stream/call/{session_id})
-   ↓
-Frame Validation (Verify 1,024 samples / 2,048 bytes)
-   ↓
-Redis Ring Buffer (LPUSH / LTRIM max 24 frames = 1,536ms; 15s TTL)
-   ↓
+    ↓
+Binary Frame Validation (Verify 1,024 samples / 2,048 bytes Int16)
+    ↓
+Redis Ring Buffer (LPUSH + LTRIM max 24 frames = 1,536ms; 15s TTL)
+    ↓
 Hop Cadence Trigger (Every 12 frames = 768ms)
-   ↓
-VAD Silence Stripping (Silero ONNX: discard if speech ratio < 0.15)
-   ↓
-Preprocessing & Quality Check (Float32 [-1, 1], DC offset removal, Hann window)
-   ↓
-PRIMARY ENGINE: Speaker-Independent Anti-Spoof (AASIST / RawNet2 Waveform Model)
-   ↓
-┌───────────────────────────────────────┴───────────────────────────────────────┐
-▼                                                                               ▼
-Auxiliary Acoustic / Spectral Evidence                               Biomechanical Prosodic Evidence
-(ResNet-18 Log-Mel Spectrogram -> Vocoder Risk)                       (Praat Parselmouth -> F0, Jitter, Shimmer, HNR)
-│                                                                               │
-└───────────────────────────────────────┬───────────────────────────────────────┘
-                                        ↓
-                         Optional Speaker Verification (Mode B)
-                         (ECAPA-TDNN 192-dim vector vs. Supabase pgvector)
-                                        ↓
-                         Multi-Signal Feature / Score Fusion
-                                        ↓
-                         Temporal Aggregation (Asymmetric EMA)
-                         (α_escalate = 0.65, α_deescalate = 0.25)
-                                        ↓
-                         Threat State Machine (Hysteresis)
-                         (GREEN <40.0, AMBER 40.0–74.9, RED >=75.0)
-                                        ↓
-┌───────────────────────────────────────┴───────────────────────────────────────┐
-▼                                                                               ▼
-Active PITCH Challenge                                               Pre-Transaction Security Gate
-(Triggered on AMBER / RED)                                           (POST /v1/transaction/evaluate-authorization)
-│                                                                               │
-└───────────────────────────────────────┬───────────────────────────────────────┘
-                                        ↓
-                            Deterministic Intervention
-                        (HTTP 200 Allow / HTTP 403 Hard Block)
+    ↓
+VAD Silence Stripping (Discard window if speech ratio < 0.15)
+    ↓
+Streaming Deepfake Detector + Prosodic Extractor
+    ↓
+Multi-Signal Fusion -> Asymmetric EMA -> ThreatState
+    ↓
+WebSocket Telemetry Emission (JSON packet with 14 metric fields)
+    ↓
+Downstream Gate Interaction (HTTP 200 Allow / HTTP 403 Block)
 ```
 
 ---
 
-## 5. Model Research & Candidate Selection Framework
+## 5. Research Dataset Strategy & Evaluation Protocol
 
-### 5.1 Open-Source Anti-Spoof Model Study
-The project evaluated authoritative speech deepfake and countermeasure architectures from the **ASVspoof 2021** and **ASVspoof5** research benchmarks:
+VaaniShield mandates strict separation across dataset roles to avoid data leakage and prevent misleading claims:
 
-```
-┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
-│                             CANDIDATE MODEL EVALUATION MATRIX                                    │
-├─────────────────────┬──────────────────────┬──────────────────────┬──────────────────────────────┤
-│ Selection Dimension │ AASIST / AASIST-L    │ RawNet2              │ Existing ResNet-18 Path      │
-├─────────────────────┼──────────────────────┼──────────────────────┼──────────────────────────────┤
-│ Reference Repo      │ clovaai/aasist       │ ASVspoof Baseline    │ Custom Spectrogram Baseline  │
-│ Primary Focus       │ Integrated Graph Attn│ End-to-End Raw Sinc  │ 2D CNN over Log-Mel Spec     │
-│ Input Format        │ Raw 16kHz Waveform   │ Raw 16kHz Waveform   │ 80-bin Log-Mel Spectrogram   │
-│ Parameter Count     │ ~290K (L) / ~850K    │ ~14.4M               │ ~11.2M                       │
-│ Inference Latency   │ < 25 ms (CPU TARGET) │ ~45 ms (CPU TARGET)  │ < 20 ms (CPU TARGET)         │
-│ Memory Footprint    │ Very Small (<50 MB)  │ Moderate (~120 MB)   │ Moderate (~90 MB)            │
-│ Telephony Resiliency│ High (Spectro-Temp)  │ Moderate             │ Low (Degrades on AMR 8kHz)   │
-│ Pretrained Weights  │ Public (ASVspoof21)  │ Public (ASVspoof21)  │ Requires Custom Weights      │
-│ Software License    │ MIT License          │ MIT License          │ MIT License                  │
-│ ONNX Exportability  │ Supported            │ Supported            │ Native                       │
-│ Project Decision    │ RECOMMENDED PRIMARY  │ REFERENCE / BACKUP   │ AUXILIARY ACOUSTIC SIGNAL    │
-└─────────────────────┴──────────────────────┴──────────────────────┴──────────────────────────────┘
+```text
+Train / Develop (ASVspoof 2019 LA)
+        ↓
+Baseline Model Experiments
+        ↓
+Cross-Dataset Generalization (ASVspoof 2021 DF)
+        ↓
+Communication Robustness (ASVspoof 2021 LA)
+        ↓
+Independent Datasets (e.g., WaveFake)
+        ↓
+Analyze Cross-Dataset Generalization & Avoid Data Leakage
 ```
 
-#### Detailed Model Findings:
-1. **AASIST & AASIST-L (Integrated Spectro-Temporal Graph Attention Networks)**:
-   * *Architecture*: SincNet raw waveform front-end followed by a heterogeneous graph attention layer modeling spectral and temporal graph representations concurrently.
-   * *AASIST-L*: Lightweight variant with ~290K parameters. Delivers state-of-the-art anti-spoof discrimination at minimal CPU overhead.
-   * *Status*: Selected as the **primary speaker-independent deepfake detection engine**.
-   * *Benchmark Note*: Published EER numbers from `clovaai/aasist` (e.g., $0.83\%$ on ASVspoof 2021 LA) are **external benchmarks** and must not be reported as VaaniShield measurements.
-2. **RawNet2**:
-   * *Architecture*: End-to-end raw waveform processor using time-distributed convolutional layers and gated recurrent units (GRU).
-   * *Status*: Maintained as an alternative reference anti-spoof architecture.
-3. **Existing ResNet-18 Spectrogram Path**:
-   * *Architecture*: 2D CNN operating over 80-bin log-mel filterbank spectrograms.
-   * *Status*: Retained as an **auxiliary acoustic vocoder detector**. Provides complementary frequency-domain cues without masquerading as the primary deepfake classifier.
-4. **ECAPA-TDNN Reclassification**:
-   * *Status*: Reclassified strictly as an **optional speaker verification / identity signal** (Mode B).
-   * *Rule*: High cosine similarity against an enrolled baseline does NOT prove speech is human.
+### 5.1 Dataset Specifications
 
-### 5.2 Model Selection Criteria
-Candidate models are selected based on rigorous engineering trade-offs:
-1. **Speaker-Independent Generalization**: Must generalize across unseen voices and vocoders without caller enrollment.
-2. **Codec / Telephony Robustness**: Must maintain discrimination when subjected to AMR-NB (8 kHz) and AMR-WB (16 kHz) lossy compression.
-3. **CPU Inference Feasibility**: Must execute within $<35\text{ ms}$ on standard x86_64 CPU cores without requiring GPU hardware.
-4. **Local / Offline Execution**: Must run completely locally via ONNX Runtime without network round-trips to commercial APIs.
-5. **Licensing**: Must be permissively licensed (MIT / Apache 2.0).
+| Dataset | Designated Technical Role | Partitioning Protocol | Status |
+| :--- | :--- | :--- | :--- |
+| **ASVspoof 2019 LA** | **Initial Baseline Training & Development** | Official train, dev, and eval splits. Used to train/tune candidate models. | **Download Pending** |
+| **ASVspoof 2021 DF** | **Cross-Dataset Generalization Evaluation** | Strictly held-out evaluation set. Measures resilience to unseen vocoders and compression. **NOT training data.** | **Download Pending** |
+| **ASVspoof 2021 LA** | **Communication Robustness Evaluation** | Evaluates robustness under telephony/codec channel effects relevant to live calls. **NOT training data.** | **Download Pending** |
+| **Future Datasets** (e.g., WaveFake) | **Independent Generalization** | Reserved for subsequent evaluation phases to test novel generative architectures. | **Future Scope** |
 
-### 5.3 Optional Sequence & Temporal Models
-The platform allows future temporal modeling (e.g., lightweight GRU or mini-Transformer encoder) over sliding window score sequences. However, a temporal model will only be adopted if experimental validation shows it outperforms Asymmetric EMA smoothing without violating the $<100\text{ ms}$ hop latency budget.
-
-### 5.4 Positioning of RAG
-**RAG is NOT an audio deepfake detector.** RAG cannot process raw waveforms or spectrograms. RAG is designated as an **optional later-stage contextual intelligence layer** (e.g., retrieving banking fraud policies, transaction limits, or historical incident playbooks).
+### 5.2 Evaluation Metrics Implementation
+The evaluation script (`backend/scripts/evaluate_anti_spoof.py` in Phase B5) computes:
+* **Equal Error Rate (EER)**: Threshold $\theta$ where $\text{FAR}(\theta) = \text{FRR}(\theta)$.
+* **ROC-AUC**: Area under the receiver operating characteristic curve.
+* **FAR & FRR**: Calculated across decision thresholds $[0.0, 1.0]$.
+* **Confusion Matrix**: Bona fide vs. spoofed counts at default threshold.
+* **Precision, Recall, F1-Score**: For bona fide and spoofed classes.
 
 ---
 
-## 6. Continual / Self-Learning Pipeline & Poisoning Defense
+## 6. Continual / Self-Learning Architecture & Poisoning Defense
 
-VaaniShield implements a controlled continual-learning pipeline designed to improve detection over time while guarding against data poisoning.
+VaaniShield strictly forbids automatic online retraining from single calls:
 
 ```text
 Inference Stream
@@ -288,7 +253,7 @@ Inference Stream
 Prediction + Metadata Logging (SQLite)
        │
        ▼
-Feedback / Trusted Label Collection (SecOps / Validated User / PITCH Pass)
+Validated Label Collection (SecOps / Authenticated Ground Truth)
        │
        ▼
 Validation & Quarantine Gate (Outlier check, duplicate check, provenance check)
@@ -297,7 +262,7 @@ Validation & Quarantine Gate (Outlier check, duplicate check, provenance check)
 Curated Training Batch (Minimum quorum: 500 genuine, 500 spoof)
        │
        ▼
-Periodic Offline Retraining
+Periodic Offline Retraining (Isolated Sandbox)
        │
        ▼
 Benchmark Holdout Evaluation Gate (Candidate EER evaluated against active model)
@@ -307,11 +272,11 @@ Benchmark Holdout Evaluation Gate (Candidate EER evaluated against active model)
 ```
 
 ### 6.1 Data Poisoning Protection Rules
-1. **Source Provenance**: Every training candidate record must document its origin (`controlled_test`, `operator_review`, `pitch_pass`, `research_set`).
-2. **Label Trust Tiering**: Unverified user feedback is held in quarantine and never enters training datasets automatically.
-3. **Quarantine Pool**: Suspicious or conflicting labels are quarantined for manual SecOps audit.
+1. **Provenance Enforcement**: Every record in `training_candidates` must document origin (`controlled_test`, `operator_review`, `research_set`).
+2. **Quarantine Pool**: Samples with low confidence ($<0.90$) or unverified sources remain quarantined.
+3. **Class Balancing**: Retraining triggers only with balanced ratios of genuine and diverse spoofed classes.
 4. **Immutable Holdout Benchmark**: Models must pass evaluation against an immutable holdout testset before deployment.
-5. **Instant Rollback**: The runtime engine supports instant fallback to previous model versions via environment configuration (`ACTIVE_MODEL_VERSION`).
+5. **Instant Rollback**: The runtime engine supports instant fallback to previous model versions via `ACTIVE_MODEL_VERSION`.
 
 ---
 
@@ -324,7 +289,7 @@ Benchmark Holdout Evaluation Gate (Candidate EER evaluated against active model)
 CREATE EXTENSION IF NOT EXISTS vector;
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- Mode B Enrolled Speaker Voiceprints
+-- Mode B Enrolled Speaker Voiceprints (Optional Identity Branch)
 CREATE TABLE IF NOT EXISTS enrolled_voiceprints (
     speaker_id VARCHAR(64) PRIMARY KEY,
     display_name VARCHAR(128) NOT NULL,
@@ -422,7 +387,7 @@ CREATE TABLE IF NOT EXISTS training_candidates (
 -- Retraining Batch & Version Registry
 CREATE TABLE IF NOT EXISTS model_versions (
     version_id TEXT PRIMARY KEY,
-    architecture TEXT NOT NULL, -- 'AASIST', 'RawNet2'
+    architecture TEXT NOT NULL, -- 'ResNet', 'RawNet2', 'AASIST'
     holdout_eer REAL NOT NULL,
     promoted_at DATETIME,
     status TEXT DEFAULT 'CANDIDATE' CHECK (status IN ('CANDIDATE', 'ACTIVE', 'REJECTED', 'ROLLED_BACK'))
@@ -435,14 +400,15 @@ CREATE TABLE IF NOT EXISTS model_versions (
 
 | TRD Spec ID | Architecture Component | PRD Requirement | Verification Method |
 | :--- | :--- | :--- | :--- |
+| **TRD-OFF-01** | Offline Audio Upload & Analysis | FR-001, FR-002 | Automated test uploading WAV/MP3 files; verify risk score & evidence |
 | **TRD-ING-01** | WebSocket Ingestion (`/v1/stream`) | FR-101, FR-102 | Load test streaming 16kHz PCM chunks |
-| **TRD-BUF-01** | Redis 15s Ring Buffer | FR-201, FR-202 | Redis CLI audit verifying TTL expiry |
+| **TRD-BUF-01** | Redis 15s Ring Buffer | FR-201, FR-202 | Redis CLI audit verifying TTL expiry and disconnect deletion |
 | **TRD-VAD-01** | Silero VAD Silence Stripping | FR-301 | Verify silence windows skip neural pipeline |
-| **TRD-DET-01** | Speaker-Independent Anti-Spoof | FR-401 | Model evaluation on bona fide vs. spoof testset |
-| **TRD-DET-02** | Auxiliary ResNet-18 Log-Mel | FR-402 | Latency and feature extraction unit tests |
+| **TRD-DET-01** | Speaker-Independent Deepfake Detector | FR-401 | Model evaluation on bona fide vs. spoof testsets |
+| **TRD-DET-02** | Auxiliary Acoustic ResNet Log-Mel | FR-402 | Latency and feature extraction unit tests |
 | **TRD-PRO-01** | Parselmouth Prosody Engine | FR-501 | Verify $F_0$, jitter, shimmer extraction on test WAVs |
-| **TRD-IDN-01** | Mode B ECAPA-TDNN Verification | FR-601, FR-602 | Cosine similarity query on Supabase pgvector |
-| **TRD-RSK-01** | Asymmetric EMA & State Machine | FR-701, FR-702 | Verify rapid rise ($\alpha=0.65$) and slow decay |
+| **TRD-IDN-01** | Optional Mode B ECAPA Verification | FR-601, FR-602 | Cosine similarity query on Supabase pgvector |
+| **TRD-RSK-01** | Asymmetric EMA & State Machine | FR-701, FR-702 | Verify rapid rise ($\alpha=0.65$) and slow decay ($\alpha=0.25$) |
 | **TRD-GAT-01** | Pre-Transaction Gate (HTTP 403) | FR-801, FR-802 | Integration test confirming hard block on RED |
 | **TRD-PCH-01** | Active PITCH Challenge | FR-901, FR-902 | UI and latency verification testing |
 | **TRD-LRN-01** | SQLite Learning Registry | FR-1101, FR-1102| SQLite insert, holdout EER gating, and rollback test |

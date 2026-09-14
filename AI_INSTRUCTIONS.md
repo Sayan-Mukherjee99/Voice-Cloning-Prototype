@@ -6,7 +6,7 @@
 | **Status** | Active Operating Directive (Mandatory Project Policy) |
 | **Applies To** | All AI Coding Assistants, Subagents, and Automation Workflows |
 | **Project** | VaaniShield (वाणिShield) — Real-Time Voice Integrity & Anti-Spoofing Platform |
-| **Primary Thesis** | Speaker-Independent Real-Time Voice Deepfake & Anti-Spoof Detection Engine |
+| **Primary Thesis** | Speaker-Independent AI Speech Deepfake & Anti-Spoof Detection Engine |
 | **Project Owners** | Person A: **Shub** (Backend / AI Lead) \| Person B: **Sion** (Frontend Lead) |
 | **Reference Documents** | `PRD.md`, `TRD.md`, `SECURITY.md`, `AI_ARCHITECTURE.md`, `PHASES.md`, `MEMORY.md`, `README.md` |
 
@@ -45,7 +45,7 @@ When working inside the `Voice-Cloning-Prototype` repository, any AI assistant M
 ## 2. Mandatory Architectural Rules (Rules A–J)
 
 ### Rule A — Deepfake-First Core Architecture
-The primary product capability of VaaniShield is **real-time, speaker-independent voice deepfake and anti-spoof detection**. The system classifies speech as bona fide (genuine) or spoofed (synthetic, cloned, converted, replayed). Never silently revert the architecture to a speaker-verification-first or identity-matching-first system.
+The primary product capability of VaaniShield is **speaker-independent speech deepfake and anti-spoof detection**, beginning with an **offline speech deepfake detection MVP** (analyzing uploaded audio) and progressing to **real-time streaming detection**. The system classifies speech as bona fide (genuine) or spoofed (synthetic, cloned, converted, replayed). Never silently revert the architecture to a speaker-verification-first or identity-matching-first system.
 
 ### Rule B — Universal Detection (No Enrollment Required for Core Capability)
 The core anti-spoof engine must analyze incoming speech from any caller—including unknown callers, first-time callers, and callers with no pre-enrolled voiceprint. Speaker enrollment must never be a prerequisite for basic deepfake detection.
@@ -71,8 +71,8 @@ Live production models must never update automatically from unverified or single
 ### Rule F — Zero-Cost / Free-First Constraint
 The core product must NOT depend on paid commercial APIs (no mandatory paid LLM APIs, speech-to-text APIs, cloud GPU subscriptions, or proprietary voice APIs). All core capabilities must execute locally on open-source runtimes (Python, FastAPI, ONNX Runtime, SciPy, Librosa, Redis, SQLite) and the Supabase Free Tier ($0/month).
 
-### Rule G — Research-Grounded Model Selection
-When selecting anti-spoof models or training datasets, verify and ground all choices in official repositories, benchmark tracks (ASVspoof 2021, ASVspoof5), and academic literature (e.g., AASIST at `clovaai/aasist`, RawNet2).
+### Rule G — Research-Grounded Model Selection & Dataset Strategy
+When selecting anti-spoof models or training datasets, verify and ground all choices in official repositories, benchmark tracks (ASVspoof 2019 LA baseline, ASVspoof 2021 DF cross-dataset evaluation, ASVspoof 2021 LA robustness), and academic literature (ResNet acoustic baseline, RawNet2, AASIST). Do not claim models are final production choices before experimental validation.
 
 ### Rule H — Benchmark Attribution Discipline
 External benchmark results published in academic papers (e.g., AASIST EER on ASVspoof 2021 LA) must **NEVER** be presented as VaaniShield results. Report only measurements actually obtained using VaaniShield's own evaluation protocol.

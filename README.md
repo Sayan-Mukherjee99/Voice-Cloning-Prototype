@@ -1,6 +1,6 @@
 # VaaniShield (वाणिShield)
 
-### Real-Time Speaker-Independent AI Voice Deepfake Detection & Voice Integrity Platform
+### Speaker-Independent AI Speech Deepfake Detection & Voice Integrity Platform
 
 [![FastAPI](https://img.shields.io/badge/Backend-FastAPI_0.115-009688.svg?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![Next.js](https://img.shields.io/badge/Frontend-Next.js_16-black.svg?logo=next.js&logoColor=white)](https://nextjs.org)
@@ -13,195 +13,307 @@
 [![ONNX Runtime](https://img.shields.io/badge/Inference-ONNX_Runtime_1.20-005CED.svg)](https://onnxruntime.ai)
 [![Docker Compose](https://img.shields.io/badge/Deploy-Docker_Compose-2496ED.svg?logo=docker&logoColor=white)](https://www.docker.com)
 
-> **VaaniShield** is a real-time, speaker-independent AI voice deepfake detection and voice-integrity risk engine. It analyzes streaming audio to detect whether speech is synthetic, cloned, converted, replayed, or manipulated — **without requiring the caller to be pre-enrolled**. By fusing waveform-level anti-spoofing models, auxiliary acoustic vocoder cues, biomechanical prosody, and active challenge-response (**PITCH**), VaaniShield enforces deterministic pre-transaction circuit breakers (`POST /v1/transaction/evaluate-authorization` returning HTTP 403) to halt financial fraud before monetary loss occurs.
+> **VaaniShield** is an AI-powered voice integrity platform focused on **speaker-independent AI-generated and synthetic speech deepfake detection**. It analyzes unknown, un-enrolled speech to determine whether an audio recording or voice stream exhibits acoustic, spectral, or temporal evidence of synthetic, cloned, converted, or spoofed generation.
 
 ---
 
 ## Table of Contents
 
-1. [Core Product Thesis](#core-product-thesis)
-2. [Why Unknown Callers Can Be Analyzed](#why-unknown-callers-can-be-analyzed)
-3. [The Mass-User Problem Statement](#the-mass-user-problem-statement)
-4. [Two Operational Modes](#two-operational-modes)
-5. [How Deepfake Detection Works Conceptually](#how-deepfake-detection-works-conceptually)
-6. [AI & Signal Processing Architecture](#ai--signal-processing-architecture)
-7. [Research-Grounded Model Strategy (AASIST / RawNet2)](#research-grounded-model-strategy-aasist--rawnet2)
-8. [Optional Identity Verification (Mode B)](#optional-identity-verification-mode-b)
-9. [Active Defense: PITCH Challenge-Response](#active-defense-pitch-challenge-response)
-10. [Pre-Transaction Authorization Gate](#pre-transaction-authorization-gate)
-11. [Continual / Self-Learning Pipeline](#continual--self-learning-pipeline)
-12. [Dual-Database & Zero-Cost Architecture](#dual-database--zero-cost-architecture)
-13. [Privacy Architecture (DPDP Act 2023)](#privacy-architecture-dpdp-act-2023)
-14. [Current Implementation Maturity Status](#current-implementation-maturity-status)
-15. [Getting Started (Local Docker Compose)](#getting-started-local-docker-compose)
-16. [API & WebSocket Specifications](#api--websocket-specifications)
-17. [Telephony Constraints & Physical Realities](#telephony-constraints--physical-realities)
-18. [Project Team & Ownership](#project-team--ownership)
-19. [Git Safety Protocol](#git-safety-protocol)
-20. [Disclaimer](#disclaimer)
+1. [Primary Product Objective](#primary-product-objective)
+2. [Current Primary MVP: Offline Deepfake Detection](#current-primary-mvp-offline-deepfake-detection)
+3. [Next Adaptation: Real-Time Streaming Detection](#next-adaptation-real-time-streaming-detection)
+4. [Optional Supporting Branch: Speaker Identity Verification](#optional-supporting-branch-speaker-identity-verification)
+5. [Core Architecture & Detection Pipeline](#core-architecture--detection-pipeline)
+6. [Research Dataset Strategy & Status](#research-dataset-strategy--status)
+7. [Model Candidates & Weight Status](#model-candidates--weight-status)
+8. [Research & Implementation Progression](#research--implementation-progression)
+9. [Controlled Continual / Self-Learning Pipeline](#controlled-continual--self-learning-pipeline)
+10. [Dual-Database & Zero-Cost Architecture](#dual-database--zero-cost-architecture)
+11. [Privacy Architecture (DPDP Act 2023)](#privacy-architecture-dpdp-act-2023)
+12. [Current Implementation Maturity Matrix](#current-implementation-maturity-matrix)
+13. [Getting Started (Local Docker Stack)](#getting-started-local-docker-stack)
+14. [Scientifically Responsible Product Disclaimers](#scientifically-responsible-product-disclaimers)
 
 ---
 
-## Core Product Thesis
+## Primary Product Objective
 
-> **VaaniShield is primarily a real-time, speaker-independent AI voice deepfake detection and voice-integrity risk engine.**
+VaaniShield's primary mission is:
+> **Speaker-independent AI-generated / synthetic speech deepfake detection.**
 
-The primary product capability is answering:
-> **"Does this incoming voice stream contain evidence of AI-generated, cloned, converted, or replayed speech?"**
+The system is built to evaluate unknown, first-time, or random speakers without requiring a previously enrolled voice sample. The primary question the engine asks is:
 
-Speaker verification is an **optional secondary capability**, not the primary detection mechanism.
+> **"Does this audio contain evidence of synthetic, cloned, converted, or spoofed speech?"**
+
+Speaker verification is **NOT** the primary detector.
 
 ```text
 Speaker Verification  = "Who does this voice sound like?" (Requires prior enrollment)
 Deepfake Detection    = "Does this speech show evidence of synthesis/spoofing?" (Zero enrollment required)
-Voice Integrity       = Combined evidence from anti-spoofing, prosodic physics, temporal behavior,
-                        optional identity verification, and transactional context.
+Voice Integrity       = Evidence from deepfake detection + acoustic/prosodic analysis + 
+                        optional identity verification + contextual transaction risk.
 ```
 
 ---
 
-## Why Unknown Callers Can Be Analyzed
+## Current Primary MVP: Offline Deepfake Detection
 
-Legacy voice biometrics fail against mass-market fraud because they require victims to pre-record reference voice samples. Fraudsters weaponize voice cloning against:
-* Citizens facing **digital arrest** extortion calls.
-* Families targeted by urgent **ransom scams**.
-* Call centers handling **first-time callers**.
+The initial user-facing milestone is **Offline Speech Deepfake Detection**:
 
-VaaniShield solves this by analyzing **physical speech generation properties** rather than personal identity:
-1. **Waveform & Spectral Artifacts**: Neural vocoders (HiFi-GAN, BigVGAN) leave phase discontinuities and transposed convolution checkerboard patterns that do not exist in human speech.
-2. **Biomechanical Vocal Tract Limits**: Neural TTS models struggle to replicate physical laryngeal physics, producing unnatural pitch flatness ($F_0$), robotic jitter, and abnormal shimmer.
-3. **Conversational Synthesis Latency**: Real-time neural voice conversion introduces noticeable transmission and processing delays ($>1.5\text{ s}$).
-
-These physical properties allow VaaniShield to detect deepfakes from **any caller instantly**, with zero reference audio.
-
----
-
-## Two Operational Modes
-
-```
-┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
-│                                    VAANISHIELD PRODUCT MODES                                     │
-├─────────────────────────────────────────────────┬────────────────────────────────────────────────┤
-│ MODE A: UNIVERSAL DEEPFAKE DETECTION            │ MODE B: ENHANCED IDENTITY + INTEGRITY          │
-│ (Mass-User / Default / Zero Enrollment)         │ (Known-User / Optional Enrollment)             │
-├─────────────────────────────────────────────────┼────────────────────────────────────────────────┤
-│ • Applicable to unknown, first-time, or guest   │ • Requires pre-enrolled voiceprint baseline    │
-│ • Zero voice database required                  │ • Verifies claimed identity via ECAPA-TDNN     │
-│ • Speaker-independent anti-spoof model (AASIST) │ • Anti-spoof engine runs unconditionally       │
-│ • Biomechanical prosody analysis (Praat/SciPy)  │ • High similarity + High synthetic risk = RED  │
-│ • Output: Synthetic Risk Score (0-100), State   │ • Output: Composite Voice Integrity Score      │
-└─────────────────────────────────────────────────┴────────────────────────────────────────────────┘
+```text
+Upload Audio File (WAV / MP3)
+             ↓
+    Audio Preprocessing
+             ↓
+  Voice Activity Detection
+             ↓
+   Short Sliding Windows
+             ↓
+Speaker-Independent Detector
+             ↓
+Acoustic / Spectral / Temporal Evidence
+             ↓
+    Synthetic Risk Score
+             ↓
+       Temporal Smoothing
+             ↓
+        Risk Engine
+             ↓
+REAL / SUSPICIOUS / AI-GENERATED
 ```
 
+Users or analysts upload an audio sample and receive:
+1. **Categorical Classification**: `REAL`, `SUSPICIOUS`, or `AI-GENERATED`.
+2. **Synthetic Risk Score**: Continuous evidence score ($0.0–100.0$) estimating the likelihood of synthetic generation.
+3. **Confidence Level**: Statistical confidence bounded by speech duration and signal quality.
+4. **Forensic Evidence Summary**: Explicit acoustic, vocoder, and prosodic anomaly breakdowns.
+
+Live calling infrastructure is **not** a prerequisite for this core offline detection capability.
+
 ---
 
-## How Deepfake Detection Works Conceptually
+## Next Adaptation: Real-Time Streaming Detection
 
-```mermaid
-flowchart TD
-    A[Live Audio Stream 16kHz PCM] --> B[Silero VAD Silence Strip]
-    B -->|Active Speech| C[Speaker-Independent Anti-Spoof AASIST]
-    B -->|Active Speech| D[Auxiliary Log-Mel ResNet-18]
-    B -->|Active Speech| E[Biomechanical Prosody Parselmouth]
-    C & D & E --> F[Multi-Signal Score Fusion]
-    F --> G{speaker_id Provided?}
-    G -->|Yes: Mode B| H[ECAPA-TDNN Vector vs Supabase pgvector]
-    G -->|No: Mode A| I[Asymmetric Temporal EMA Smoothing]
-    H -->|Modulate Risk| I
-    I --> J{Threat State}
-    J -->|GREEN <40| K[Allow Transaction HTTP 200]
-    J -->|AMBER 40-74| L[Trigger PITCH Challenge]
-    J -->|RED >=75| M[Hard Circuit Breaker HTTP 403]
-    L -->|Pass| K
-    L -->|Fail| M
+Following the offline foundation, Phase 2 adapts the core detector into a low-latency streaming pipeline:
+
+```text
+Microphone Input
+       ↓
+Browser (Web Audio API)
+       ↓
+WebSocket Stream (/v1/stream/call/{session_id})
+       ↓
+Ephemeral Redis Ring Buffer
+       ↓
+Streaming Deepfake Detector (768ms hop)
+       ↓
+Continuous Risk Score & Operational Interventions
 ```
 
----
-
-## Research-Grounded Model Strategy (AASIST / RawNet2)
-
-Rather than relying on academic paper benchmarks, VaaniShield grounds model selection in the **ASVspoof 2021** and **ASVspoof5** research benchmarks:
-
-* **Primary Engine: AASIST / AASIST-L (Integrated Spectro-Temporal Graph Attention)**:
-  * Official repository: `clovaai/aasist` (Jung et al., Interspeech 2021).
-  * Direct raw waveform processing using SincNet filters and heterogeneous graph attention.
-  * AASIST-L variant contains only ~290K parameters, executing in $<25\text{ ms}$ on standard edge CPUs.
-  * *Discipline Rule*: Published paper benchmarks (e.g. $0.83\%$ EER) are external reference figures, not VaaniShield results.
-* **Reference Model: RawNet2**:
-  * Established ASVspoof baseline using raw waveform convolutions and GRUs.
-* **Auxiliary Signal: ResNet-18 Log-Mel Detector**:
-  * 2D CNN detecting frequency-domain vocoder artifacts; retained as a supporting acoustic cue.
+* Reuses the validated WebSocket streaming and buffer infrastructure developed in Phase B2.
+* Targets a local browser microphone demonstration: **No complex telephony providers, WhatsApp integrations, or VoIP systems are required**.
 
 ---
 
-## Optional Identity Verification (Mode B)
+## Optional Supporting Branch: Speaker Identity Verification
 
-When an enterprise caller has enrolled a voiceprint (`POST /v1/enroll`):
-* ECAPA-TDNN extracts a 192-dimensional vector compared via `pgvector` cosine similarity.
-* **Critical Security Principle**:
+Speaker verification (using ECAPA-TDNN 192-dimensional embeddings) is documented strictly as an **optional supporting identity branch**:
+
+```text
+Claimed Speaker ID + Audio
+             ↓
+         ECAPA-TDNN
+             ↓
+    Speaker Similarity Score
+             ↓
+"Does this voice resemble the claimed speaker?"
+```
+
+### Critical Security Distinction:
+* **High speaker similarity does NOT prove that speech is genuine.**
+* Modern voice cloning tools are explicitly designed to replicate the target speaker's acoustic profile.
+* **Interpretation Example**:
   ```text
-  High speaker similarity DOES NOT mean speech is genuine.
+  Deepfake Detector → HIGH Synthetic Risk (e.g., 86.0)
+  ECAPA-TDNN        → HIGH Speaker Similarity (e.g., 0.92)
+
+  Security Verdict  → Targeted Voice Cloning / Impersonation Attack (RED Alert).
   ```
-  A cloned voice is designed to sound like the victim. If speaker similarity is high ($>0.85$) but anti-spoof risk is elevated ($>75.0$), VaaniShield triggers **RED (Targeted Clone Impersonation Attack)**.
 
 ---
 
-## Active Defense: PITCH Challenge-Response
+## Core Architecture & Detection Pipeline
 
-**PITCH (Phonetic Instability & Transient Challenge for Humans)** is an active verification mechanism triggered on **AMBER** threat states:
-1. Prompts the caller with unpredictable, phonetically complex Hindi/English tongue-twisters (e.g., *"Pital ke bartan mein papita peela peela"*).
-2. **Exposes Conversion Latency**: Real-time neural voice conversion tools introduce noticeable processing lag ($>1.5\text{ s}$).
-3. **Breaks Neural Vocoders**: Rapid aspirated plosives and retroflex consonants cause neural vocoders to stutter, phase-smear, and glitch.
-4. **Validates Organic Pitch Excursion**: Verifies dynamic biological pitch inflection ($\Delta F_0 > 45\text{ Hz}$).
+### Initial Primary Detection Pipeline
+
+```text
+Uploaded / Live Audio
+        ↓
+Audio Preprocessing
+        ↓
+Voice Activity Detection
+        ↓
+Short Sliding Windows
+        ↓
+Speaker-Independent Deepfake Detector
+        ↓
+Acoustic / Spectral / Temporal Evidence
+        ↓
+Synthetic Risk Score
+        ↓
+Temporal Smoothing
+        ↓
+Risk Engine
+        ↓
+REAL / SUSPICIOUS / AI-GENERATED
+```
+
+### Future Multi-Signal Fusion Architecture
+
+As the research matures, the detection pipeline evolves into multi-signal fusion:
+
+```text
+                         AUDIO
+                           ↓
+                    PREPROCESSING
+                           ↓
+             ┌─────────────┼─────────────┐
+             ↓             ↓             ↓
+        Acoustic CNN    Raw Waveform   Prosody /
+        / ResNet        Model          Temporal
+             ↓             ↓             ↓
+             └─────────────┼─────────────┘
+                           ↓
+                  Deepfake Score Fusion
+                           ↓
+                    Final Risk Score
+                           ↓
+                  GREEN / AMBER / RED
+```
 
 ---
 
-## Pre-Transaction Authorization Gate
+## Research Dataset Strategy & Status
 
-The platform provides a synchronous circuit breaker (`POST /v1/transaction/evaluate-authorization`) responding in $<35\text{ ms}$:
+VaaniShield adheres to rigorous research principles: **The system does not rely on a single dataset for final claims.** The evaluation progression is structured to prevent data leakage and ensure cross-dataset generalizability:
 
-| Threat State | Risk Score | Transaction Amount | Gate Decision | HTTP Status | Action Enforced |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **GREEN** | $0.0 - 39.9$ | Any amount | `APPROVED` | `200 OK` | Payment proceeds immediately. |
-| **AMBER** | $40.0 - 74.9$ | $< \text{₹}10,000$ | `APPROVED_WITH_WARNING` | `200 OK` | Proceeds with SMS notification. |
-| **AMBER** | $40.0 - 74.9$ | $\ge \text{₹}10,000$ | `PENDING_CHALLENGE` | `428 Precondition`| Paused until PITCH challenge passes. |
-| **RED** | $\ge 75.0$ | Any amount ($> \text{₹}0$) | `BLOCKED` | `403 Forbidden` | **Deterministic Hard Block**. |
+```text
+Train / Develop (ASVspoof 2019 LA)
+        ↓
+Baseline Model Experiments
+        ↓
+Evaluate Cross-Dataset Generalization (ASVspoof 2021 DF)
+        ↓
+Evaluate Communication Robustness (ASVspoof 2021 LA)
+        ↓
+Evaluate Independent Datasets (e.g., WaveFake)
+```
+
+| Dataset | Research Role | Status | Notes |
+| :--- | :--- | :--- | :--- |
+| **ASVspoof 2019 LA** | **Initial Baseline Training & Development** | **Download Pending** | Logical Access partition. Strictly segmented into training, development/validation, and held-out evaluation splits. |
+| **ASVspoof 2021 DF** | **Cross-Dataset Generalization Evaluation** | **Download Pending** | Out-of-domain evaluation on unseen compression and vocoders. **NOT** the current training dataset. |
+| **ASVspoof 2021 LA** | **Communication Robustness Evaluation** | **Download Pending** | Evaluates robustness under telephony/channel conditions relevant to eventual live calls. **NOT** the current training dataset. |
+| **Future Datasets** (e.g., WaveFake) | **Independent Generalization** | **Future Scope** | Independent benchmarks reserved for subsequent validation phases. |
+
+*Datasets are pending download and integration. No dataset is claimed as already integrated.*
 
 ---
 
-## Continual / Self-Learning Pipeline
+## Model Candidates & Weight Status
 
-VaaniShield improves detection over time through a controlled, batched learning architecture:
-* **No Blind Retraining**: The model is never retrained automatically after individual calls.
-* **Local Event Logging**: Model predictions, feature summaries, and operator feedback are logged into a local SQLite registry (`vaani_learning.db`).
-* **Poisoning Defense**: Feedback from untrusted sources is quarantined; outliers and near-duplicate vectors are rejected.
-* **Holdout Validation Gate**: Retrained candidate models must demonstrate improved Equal Error Rate (EER) on an immutable benchmark holdout set before promotion.
-* **Instant Rollback**: If performance degrades, the system instantly rolls back to the prior version tag via environment configuration.
+### Candidate Baseline Models Under Investigation:
+1. **ResNet Acoustic Baseline**: 2D CNN acoustic model extracting frequency-domain vocoder signatures from log-mel spectrograms.
+2. **RawNet2**: End-to-end raw waveform convolutional and recurrent neural architecture.
+3. **AASIST / AASIST-L**: Integrated Spectro-Temporal Graph Attention Network operating directly on raw speech waveforms.
+
+### Grounding & Intellectual Honesty Rules:
+* **No Pre-Selection**: No candidate model is claimed as already selected as the final production model.
+* **No Claimed External Benchmarks**: VaaniShield makes **NO claim** of having achieved any published academic benchmark result (e.g., AASIST published EER on ASVspoof 2021). All external figures are academic references only.
+* **Model Weight Status**: Files in `models/` remain **unpopulated** in the repository. The backend `InferenceEngine` currently executes heuristic and mock fallbacks when weights are absent.
+
+---
+
+## Research & Implementation Progression
+
+The development roadmap is structured across six primary product phases:
+
+```text
+PHASE 1: Offline Speech Deepfake Detection
+         ├── B3: Offline dataset verification + audio preprocessing foundation
+         ├── B4: Base offline speech deepfake detector (candidate baselines)
+         ├── B5: Model evaluation and metrics (EER, ROC-AUC, FAR, FRR, confusion matrix)
+         └── B6: Cross-dataset generalization (ASVspoof 2021 DF)
+        ↓
+PHASE 2: Real-Time Streaming Deepfake Detection
+         └── B8: Real-time streaming inference (reusing B2 WebSocket infrastructure)
+        ↓
+PHASE 3: Multi-Signal Risk Fusion
+         └── B7: Multi-signal fusion (acoustic, waveform, prosody/temporal)
+        ↓
+PHASE 4: Optional Speaker Identity Verification
+         └── B9: Optional speaker verification (ECAPA-TDNN supporting branch)
+        ↓
+PHASE 5: Active Challenge / PITCH + Security Action
+         └── B10: PITCH challenge + security / transaction action
+        ↓
+PHASE 6: Validated Self-Learning / Research Evaluation
+         └── B11: Validated self-learning & model improvement pipeline
+```
+
+---
+
+## Controlled Continual / Self-Learning Pipeline
+
+VaaniShield strictly avoids unsafe automatic retraining on live calls:
+
+```text
+Inference
+   ↓
+Prediction + Metadata Logging (SQLite)
+   ↓
+Trusted / Validated Feedback (Supervisor audit / authenticated ground truth)
+   ↓
+Curated Training Data (Quarantine & outlier rejection)
+   ↓
+Periodic Training Batch (Minimum balanced sample quorum)
+   ↓
+Holdout Benchmark Evaluation (Immutable testset)
+   ↓
+Compare Against Current Model EER
+   ↓
+Promote ONLY if Validated (Otherwise discard candidate & rollback)
+```
+
+### Documented Learning Risks:
+* **Incorrect Labels**: Malicious or mistaken reports corrupting decision boundaries.
+* **Data Poisoning**: Adversaries submitting adversarial samples to force blind spots.
+* **Model Drift & Regression**: New training batches degrading performance on baseline speech.
+* **Evaluation Leakage**: Contaminating test and holdout corpora with training data.
 
 ---
 
 ## Dual-Database & Zero-Cost Architecture
 
-> **Hard Project Constraint: The core architecture is designed so that no paid API is required.**
-
-1. **Supabase (PostgreSQL 16 + pgvector)**:
-   * Operates within the **Supabase Free Tier** ($0/month, 500 MB DB, 1 GB storage, up to 50k MAU).
-   * Houses persistent application state: call sessions, transaction evaluations, and Mode B voiceprints.
+The platform enforces a strict **Zero-Cost / Free-First** technical constraint:
+1. **Supabase Free Tier (Managed PostgreSQL 16 + pgvector)**:
+   - Houses persistent application state: call sessions, transaction evaluations, and Mode B voiceprints ($0/month).
 2. **SQLite (`vaani_learning.db`)**:
-   * Local, file-based embedded database for high-throughput ML telemetry, feedback records, and candidate retraining batches with zero server cost.
-3. **Local Runtimes**: Core inference runs locally via ONNX Runtime and PyTorch (CPU utility) without paid cloud GPU services or proprietary speech APIs.
+   - Local embedded database for high-throughput ML telemetry, feedback records, and candidate retraining batches.
+3. **Zero Mandatory Paid APIs**:
+   - All core detection runs locally via open-source runtimes (Python, FastAPI, ONNX Runtime, SciPy, Librosa, Redis). No commercial LLMs, speech APIs, or cloud GPU subscriptions are required.
 
 ---
 
 ## Privacy Architecture (DPDP Act 2023)
 
-* **Zero Raw Audio at Rest**: No audio files (`.wav`, `.pcm`) are ever written to disk or permanent database tables.
-* **Ephemeral In-Memory Buffers**: Audio frames reside in volatile RAM within Redis circular ring buffers governed by a mandatory **15-second TTL** (`EXPIRE 15`), purged on disconnect.
-* **Mathematical Telemetry Only**: Audit logs store derived non-invertible feature scalars ($F_0$, jitter, mel-band energies), never raw speech.
+* **Zero Raw Audio at Rest**: Raw audio is non-persistent by default. Audio frames reside only in volatile RAM within Redis circular ring buffers bounded by a **15-second TTL** (`EXPIRE 15`), purged on disconnect.
+* **Mathematical Telemetry Only**: Audit logs store non-invertible feature scalars ($F_0$, jitter, mel energies, risk scores), never raw voice recordings.
+* **No Silent Harvesting**: Retraining data originates strictly from controlled test generation, public research datasets, or explicit opt-in agreements.
 
 ---
 
-## Current Implementation Maturity Status
+## Current Implementation Maturity Matrix
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
@@ -217,17 +329,18 @@ VaaniShield improves detection over time through a controlled, batched learning 
 │                      │ Frontend Dashboard      │ Next.js 16, Zustand store, ThreatDial, Gate UI │
 │                      │ Biomechanical Prosody   │ Praat Parselmouth extracts F0, Jitter, Shimmer  │
 ├──────────────────────┼─────────────────────────┼─────────────────────────────────────────────────┤
-│ MOCK / FALLBACK      │ Neural Anti-Spoofing    │ Heuristic fallback when resnet18.onnx is absent │
+│ MOCK / FALLBACK      │ Neural Anti-Spoofing    │ Heuristic fallback when model ONNX is absent    │
 │                      │ Silero VAD              │ RMS energy thresholding when ONNX is absent     │
-│                      │ ECAPA-TDNN Embedding    │ Hash-seeded unit vectors when model is absent   │
+│                      │ ECAPA-TDNN Embedding    │ Hash-seeded random unit vectors when absent     │
 │                      │ PITCH Challenge Logic   │ Static UI drawer; lacks backend acoustic check  │
 ├──────────────────────┼─────────────────────────┼─────────────────────────────────────────────────┤
-│ PLANNED / RESEARCH   │ Primary Anti-Spoof Model│ Integration of pretrained AASIST-L ONNX model   │
-│                      │ Closed-Loop PITCH Check │ Backend response latency and intonation check   │
-│                      │ Telephony Transcoding   │ AMR-NB/WB bandpass simulation filter            │
+│ RESEARCH / PLANNED   │ Offline Deepfake MVP    │ Offline WAV/MP3 ingestion & baseline detector   │
+│                      │ Candidate Baselines     │ ResNet, RawNet2, AASIST model experiments       │
+│                      │ Model Metrics Suite     │ EER, ROC-AUC, FAR, FRR, confusion matrix        │
+│                      │ Cross-Dataset Eval      │ ASVspoof 2021 DF generalization testing         │
+│                      │ Multi-Signal Fusion     │ Weighted fusion of waveform, spectral, prosody  │
 ├──────────────────────┼─────────────────────────┼─────────────────────────────────────────────────┤
-│ PROPOSED             │ Dual Database Topology  │ Supabase Free (PostgreSQL/vector) + SQLite log  │
-│                      │ Self-Learning Registry  │ SQLite metadata logging with validation gates   │
+│ PROPOSED             │ Self-Learning Registry  │ SQLite metadata logging with validation gates   │
 │                      │ Anti-Poisoning Controls │ Quarantine pool and holdout evaluation runner   │
 ├──────────────────────┼─────────────────────────┼─────────────────────────────────────────────────┤
 │ UNVERIFIED           │ Telephony Codec EER     │ Anti-spoof EER under real 8kHz AMR-NB cell calls│
@@ -237,47 +350,29 @@ VaaniShield improves detection over time through a controlled, batched learning 
 
 ---
 
-## Getting Started (Local Docker Compose)
+## Getting Started (Local Docker Stack)
 
 ```bash
 # 1. Clone repository
 git clone https://github.com/Sayan-Mukherjee99/Voice-Cloning-Prototype.git
 cd Voice-Cloning-Prototype
 
-# 2. Launch complete stack (FastAPI, Redis, PostgreSQL/pgvector, Next.js)
+# 2. Launch local development stack (FastAPI, Redis, PostgreSQL/pgvector, Next.js)
 docker compose up -d
 
-# 3. Access interfaces
+# 3. Access local services
 # Next.js SecOps Dashboard:  http://localhost:3000
 # FastAPI Interactive Docs:   http://localhost:8000/docs
 # System Health Diagnostic:   http://localhost:8000/health
 ```
 
----
-
-## API & WebSocket Specifications
-
-* **WebSocket Audio Stream**: `WS /v1/stream/call/{session_id}` (Accepts binary 16kHz 16-bit linear PCM in 1,024-sample frames; emits telemetry JSON every 768ms).
-* **Pre-Transaction Gate**: `POST /v1/transaction/evaluate-authorization` (Accepts `session_id`, `amount_inr`, `beneficiary_vpa`; returns HTTP 200 on GREEN, HTTP 403 on RED).
-* **Speaker Enrollment**: `POST /v1/enroll` (Mode B voiceprint registration accepting base64 audio).
-* **Diagnostics**: `GET /health` (Reports container and model runtime availability).
+*Note: Pretrained model weights and training datasets are pending download and integration. The system currently boots with mock and heuristic fallbacks for end-to-end interface validation.*
 
 ---
 
-## Telephony Constraints & Physical Realities
+## Scientifically Responsible Product Disclaimers
 
-* **Mobile OS Sandboxing**: Neither iOS nor Android permits third-party apps to tap raw cellular voice calls. VaaniShield integrates at enterprise softphones, WebRTC clients, and carrier SBC media-forking gateways.
-* **Lossy Codec Filtering**: Mobile voice codecs (AMR-NB at 8 kHz) strip acoustic frequencies above $3.4\text{ kHz}$. VaaniShield uses lower-band biomechanical prosody and active challenge-response (PITCH) to maintain detection.
-
----
-
-## Project Team & Ownership
-
-* **Person A — Shub (Backend / AI Lead)**: Architecture, audio ingestion, anti-spoof model integration, prosody extraction, risk engine, Supabase/SQLite databases, and security gates.
-* **Person B — Sion (Frontend Lead)**: Next.js 16 UI, canvas waterfall, prosody time-series, ThreatDial, Mock UPI gate, PITCH drawer, and client networking.
-
----
-
-## Git Safety Protocol
-
-Under mandatory project policy, automated coding agents are **strictly prohibited** from running `git push`, merging to `main`, releasing tags, or modifying remote Git configurations without explicit human authorization.
+1. **Probabilistic Assessment**: The system estimates the likelihood that speech exhibits characteristics associated with synthetic or spoofed speech. The risk score is an evidence-based probabilistic signal, **not an absolute proof of authenticity**.
+2. **No Guaranteed 100% Detection**: The platform does **NOT** claim that it can always detect AI voices, nor does it guarantee zero false positives or false negatives.
+3. **Speaker Similarity Disclaimer**: High speaker similarity confirms acoustic resemblance to an enrolled voiceprint; it does **not** prove the voice is genuine, authorized, or human.
+4. **Independent Research Attribution**: External benchmark results reported in scientific literature belong to their respective researchers and are not claimed as VaaniShield results.
