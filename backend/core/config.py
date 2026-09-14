@@ -105,6 +105,28 @@ class Settings(BaseSettings):
     # CORS
     cors_origins: list[str] = ["http://localhost:3000", "http://127.0.0.1:3000"]
 
+    # Phase B3: Offline Dataset & Manifest paths
+    asvspoof_la_root: str = "datasets/LA/LA"
+    manifest_dir: str = "data/manifests"
+
+    def resolve_dataset_root(self) -> str:
+        """Dynamically resolve ASVspoof 2019 LA root directory."""
+        from pathlib import Path
+        candidate = Path(self.asvspoof_la_root)
+        if (candidate / "ASVspoof2019_LA_cm_protocols").is_dir():
+            return str(candidate)
+        # Check parent if double-nested or flat
+        alt1 = candidate / "LA"
+        if (alt1 / "ASVspoof2019_LA_cm_protocols").is_dir():
+            return str(alt1)
+        alt2 = Path("datasets/LA")
+        if (alt2 / "ASVspoof2019_LA_cm_protocols").is_dir():
+            return str(alt2)
+        if (alt2 / "LA" / "ASVspoof2019_LA_cm_protocols").is_dir():
+            return str(alt2 / "LA")
+        return str(candidate)
+
+
 
 settings = Settings()
 
