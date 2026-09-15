@@ -4,9 +4,9 @@
 | :--- | :--- |
 | **Project Name** | VaaniShield (वाणिShield) — Real-Time Voice Integrity & Anti-Spoofing Platform |
 | **Repository** | `Sayan-Mukherjee99/Voice-Cloning-Prototype` |
-| **Current Project Phase** | **Phase B3 Completed** (Offline Dataset Ingestion & Audio Preprocessing Foundation) \| **AI Instructions v3.0.0 Active** |
-| **Next Recommended Phase**| **Phase B4 — Base Offline Speech Deepfake Detector (Candidate Baselines)** (Backend Track / Shub) |
-| **Documentation Lock Status**| **SYNCHRONIZED (v3.0.0 AI Instructions & v2.3.0 Architecture)** |
+| **Current Project Phase** | **Phase B4 Completed** (Base Offline Speech Deepfake Detector — ResNet Baseline) \| **AI Instructions v3.0.0 Active** |
+| **Next Recommended Phase**| **Phase B5 — Raw Audio Candidate Baseline (RawNet2 / SincNet)** (Backend Track / Shub) |
+| **Documentation Lock Status**| **SYNCHRONIZED (v3.0.0 AI Instructions & v2.4.0 Phase B4 Execution)** |
 | **Project Ownership** | Person A: **Shub** (Backend / AI Lead) \| Person B: **Sion** (Frontend Lead) |
 | **Ledger Last Updated** | September 2026 |
 
@@ -125,9 +125,9 @@ Potential model candidates under consideration:
 > **No Benchmark Claims**: VaaniShield makes **NO claim** of having achieved any published academic benchmark result. External benchmarks are external reference literature only.
 
 ### 4.2 Current Model Weight Status
-* Model weights in `models/` directory remain **unpopulated** in the repository.
-* When model weights are absent, `backend/ai/inference.py` executes **mock/heuristic fallbacks**.
-* Real deepfake detection capability will be marked validated only after models are trained/benchmarked on local data under Phase B4 and B5.
+* **ResNet Acoustic Baseline**: Trained checkpoint saved at `models/checkpoints/resnet18_baseline_best.pt` (11.24M parameters, 42.86 MB). Evaluated on ASVspoof 2019 LA DEV (0.00% EER, 1.0000 AUC) and held-out EVAL (20.65% EER, 0.8499 AUC, 0.97% FRR, 52.40% FAR).
+* **Raw Audio Models (RawNet2, AASIST)**: Weight files remain unpopulated pending Phase B5.
+* **Inference Pipeline Integration**: Offline evaluation CLI uses trained checkpoint; runtime service integration is staged for real-time streaming pipeline (Phase B8).
 
 ---
 
@@ -208,6 +208,44 @@ Promote ONLY if Validated (Otherwise discard & rollback)
   - **Automated Tests**: 35/35 passing tests in `backend/tests/` (7 stream, 3 api, 6 preprocessor, 4 loader, 3 manifest, 7 protocol, 5 verifier).
   - **Next Step**: Phase B4: Base Offline Speech Deepfake Detector (Candidate Baselines).
 
+* **Phase B4: Base Offline Speech Deepfake Detector (ResNet Acoustic Baseline)** — **[COMPLETE]**
+  - **Model Architecture**: Implemented `BaseDeepfakeDetector` ABC (`backend/ai/models/base.py`) and `ResNetAcousticBaseline` (`backend/ai/models/resnet.py`) with differentiable 80-bin log-mel filterbank front-end ($25\text{ ms}$ window, $10\text{ ms}$ hop, 512 FFT) processing raw audio `[B, 64000]` to `[B, 1, 80, 400]` to `[B, 2]` binary logits (11,236,162 parameters, 42.86 MB). Also implemented fallback `SlimResNetBaseline` (2,815,682 parameters).
+  - **Metrics & Training Infrastructure**: Implemented vectorized `compute_eer`, `compute_roc_auc` (Mann-Whitney rank-sum), `calculate_far_frr`, and `compute_confusion_matrix` (`backend/ai/training/metrics.py`). Implemented `TrainingConfig` (`backend/ai/training/config.py`) and `DeepfakeTrainer` (`backend/ai/training/trainer.py`).
+  - **Pre-Training Verification**: Executed 14 unit and smoke tests before long training (`test_model_resnet.py`, `test_metrics.py`, `test_training_smoke.py`). 14/14 passed.
+  - **CPU Feasibility Benchmark**: Systematically evaluated physical batch sizes on Windows CPU (6 threads):
+    - Batch Size 8: **9.79 samples/sec**, 420.28 MB RSS RAM, mean forward 300.01 ms, mean backward 517.55 ms, est. balanced epoch = 8.79 min.
+    - Batch Size 4: **9.34 samples/sec**, 439.26 MB RSS RAM, mean forward 167.34 ms, mean backward 261.09 ms, est. balanced epoch = 9.21 min.
+    - Batch Size 2: **8.38 samples/sec**, 485.36 MB RSS RAM, mean forward 92.52 ms, mean backward 146.03 ms, est. balanced epoch = 10.26 min.
+    - Batch Size 1: **6.65 samples/sec**, 481.49 MB RSS RAM, mean forward 54.95 ms, mean backward 95.46 ms, est. balanced epoch = 12.94 min.
+    - Report persisted: `data/reports/cpu_feasibility_benchmark.json`.
+  - **Baseline Training (B4.5 / B4.6)**:
+    - Trained on ASVspoof 2019 LA TRAIN partition (balanced subset: 2,000 utterances: 1,000 bona fide + 1,000 spoof).
+    - Physical batch size 8, gradient accumulation 4 steps ($\implies$ effective batch size 32).
+    - Adam optimizer ($\text{lr}=10^{-4}$), gradient clipping (max norm 1.0).
+    - Class Imbalance Strategy A: Weighted Cross-Entropy ($w_0 = 4.9186, w_1 = 0.5566$).
+    - 3 epochs completed (loss: 0.2825 -> 0.0778 -> 0.0107; DEV loss: 0.0438 -> 0.0011 -> 0.0005; DEV EER: 0.00%).
+    - Validation on DEV partition with early stopping. Lowest DEV EER checkpoint selected.
+    - Checkpoint saved: `models/checkpoints/resnet18_baseline_best.pt` (11,236,162 parameters, 42.86 MB).
+  - **DEV Threshold Calibration (B4.7)**:
+    - Evaluated on 1,000 stratified samples (102 bona fide, 898 spoof) from ASVspoof 2019 LA DEV partition.
+    - DEV EER: **0.00%**, DEV ROC-AUC: **1.0000**, Accuracy: **100.00%**, FAR: 0.00%, FRR: 0.00%.
+    - Calibrated optimal operating threshold: $\theta^* = 0.0340$ (precisely 0.033981). Report saved to `data/reports/evaluation_dev_1789443527.json`.
+  - **Held-Out EVAL Benchmark (B4.8)**:
+    - Single held-out benchmark pass on ASVspoof 2019 LA EVAL partition with strictly frozen model and threshold $\theta^* = 0.0340$.
+    - Evaluated 1,000 stratified samples (103 bona fide, 897 spoof).
+    - EVAL EER: **20.65%**, EVAL ROC-AUC: **0.8499**, Accuracy: **52.90%**, FAR: **52.40%**, FRR: **0.97%**.
+    - Precision: **99.77%**, Recall: **47.60%**, F1-Score: **0.6445**. Confusion Matrix: TN=102, FP=1, FN=470, TP=427.
+    - Throughput: 5.81 samples/sec on CPU. Report saved to `data/reports/evaluation_eval_1789443780.json`.
+    - Key Empirical Finding: Unseen spoofing attacks (A07–A19) in the EVAL partition exhibit the expected spectral domain shift on the baseline detector, yielding low False Rejection on human audio (0.97%) and high precision (99.77%), while synthetic vocoder variations motivate raw-audio architectures (RawNet2, Phase B5) and multi-signal fusion (Phase B7).
+  - **ONNX Export (B4.9)**:
+    - Attempted ONNX export via `backend/scripts/export_onnx.py`.
+    - Captured and recorded honest diagnostics in `data/reports/onnx_export_report.json`:
+      1. PyTorch ONNX TorchScript operator limitation: `aten::stft` does not support complex types in end-to-end waveform input graph.
+      2. Environment limitation: `onnxscript` / `onnx` package dependency in Python 3.13.
+      3. Validated TorchScript tracing alternative (`torch.jit.trace`) saved to `models/checkpoints/resnet18_baseline.torchscript.pt`.
+  - **Regression Suite**: 49/49 backend regression tests passing in 36.41s.
+  - **Git Safety**: Zero commits, zero pushes, zero remote modifications.
+
 ---
 
 ### [2026-09-14] Architecture Decision Record (ADR-09): Offline Deepfake Detection MVP Realignment
@@ -256,7 +294,7 @@ Promote ONLY if Validated (Otherwise discard & rollback)
 
 ## 8. Immediate Next Implementation Milestone
 
-* **Phase B4 — Base Offline Speech Deepfake Detector (Candidate Baselines)** (Backend Track / Shub).
-  - Prepare candidate model inference harnesses for ResNet acoustic baseline, RawNet2, and AASIST.
-  - Wire offline inference pipeline to accept preprocessed audio chunks from Phase B3.
-  - Validate forward passes on mock/test audio with continuous probability outputs.
+* **Phase B5 — Raw Audio Candidate Baseline (RawNet2 / SincNet)** (Backend Track / Shub).
+  - Implement raw waveform end-to-end detector (SincNet convolution front-end + residual blocks + GRU) operating directly on time-domain samples `[B, 64000]`.
+  - Benchmark CPU throughput against the ResNet acoustic baseline.
+  - Evaluate complementary detection capability on unseen spoofing attacks (A07–A19).
