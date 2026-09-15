@@ -44,8 +44,10 @@ VaaniShield investigates:
 │ VAD (Silero)         │ MOCK / FALLBACK         │ ONNX wrapper exists; falls back to RMS energy   │
 │                      │                         │ because models/ directory is unpopulated.       │
 ├──────────────────────┼─────────────────────────┼─────────────────────────────────────────────────┤
-│ Deepfake Detector    │ RESEARCH / PLANNED      │ Candidate baseline models: ResNet, RawNet2,     │
-│                      │                         │ AASIST. No model pre-selected as final.         │
+│ Deepfake Detector    │ IMPLEMENTED (B4)        │ ResNetAcousticBaseline (11.2M params) with      │
+│ (ResNet Baseline)    │                         │ differentiable 80-bin log-mel front-end.        │
+│                      │                         │ Checkpoint: resnet18_baseline_best.pt.          │
+│                      │                         │ Empirical: DEV EER 0.00%, EVAL EER 20.65%.      │
 ├──────────────────────┼─────────────────────────┼─────────────────────────────────────────────────┤
 │ Log-Mel Filterbank   │ IMPLEMENTED             │ 80-bin Librosa / Scipy mel-spectrogram (25ms    │
 │ Spectrogram          │                         │ window, 10ms hop, 512 FFT, 20-8000Hz).          │
