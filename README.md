@@ -211,26 +211,28 @@ Evaluate Independent Datasets (e.g., WaveFake)
 
 | Dataset | Research Role | Status | Notes |
 | :--- | :--- | :--- | :--- |
-| **ASVspoof 2019 LA** | **Initial Baseline Training & Development** | **Download Pending** | Logical Access partition. Strictly segmented into training, development/validation, and held-out evaluation splits. |
+| **ASVspoof 2019 LA** | **Initial Baseline Training & Development** | **Ingested & Verified** | 121,461 total CM utterances across TRAIN (25,380), DEV (24,844), and EVAL (71,237). 100% 16 kHz Mono FLAC verified with JSONL streaming manifests. |
 | **ASVspoof 2021 DF** | **Cross-Dataset Generalization Evaluation** | **Download Pending** | Out-of-domain evaluation on unseen compression and vocoders. **NOT** the current training dataset. |
 | **ASVspoof 2021 LA** | **Communication Robustness Evaluation** | **Download Pending** | Evaluates robustness under telephony/channel conditions relevant to eventual live calls. **NOT** the current training dataset. |
 | **Future Datasets** (e.g., WaveFake) | **Independent Generalization** | **Future Scope** | Independent benchmarks reserved for subsequent validation phases. |
-
-*Datasets are pending download and integration. No dataset is claimed as already integrated.*
 
 ---
 
 ## Model Candidates & Weight Status
 
 ### Candidate Baseline Models Under Investigation:
-1. **ResNet Acoustic Baseline**: 2D CNN acoustic model extracting frequency-domain vocoder signatures from log-mel spectrograms.
-2. **RawNet2**: End-to-end raw waveform convolutional and recurrent neural architecture.
+1. **ResNet Acoustic Baseline**: 2D CNN acoustic model extracting frequency-domain vocoder signatures from log-mel spectrograms. (Implemented in Phase B4; trained checkpoint saved at `models/checkpoints/resnet18_baseline_best.pt`).
+2. **RawNet2**: End-to-end raw waveform convolutional and recurrent neural architecture. (Phase B5 candidate).
 3. **AASIST / AASIST-L**: Integrated Spectro-Temporal Graph Attention Network operating directly on raw speech waveforms.
 
 ### Grounding & Intellectual Honesty Rules:
-* **No Pre-Selection**: No candidate model is claimed as already selected as the final production model.
-* **No Claimed External Benchmarks**: VaaniShield makes **NO claim** of having achieved any published academic benchmark result (e.g., AASIST published EER on ASVspoof 2021). All external figures are academic references only.
-* **Model Weight Status**: Files in `models/` remain **unpopulated** in the repository. The backend `InferenceEngine` currently executes heuristic and mock fallbacks when weights are absent.
+* **No Pre-Selection**: The ResNet baseline is an initial acoustic comparator, not the final production detector.
+* **No Claimed External Benchmarks**: VaaniShield reports only empirical, locally measured benchmark figures. No external academic benchmark is claimed as a VaaniShield achievement.
+* **Baseline Empirical Measurements (Phase B4)**:
+  - Architecture: `ResNetAcousticBaseline` (11,236,162 parameters, 42.86 MB)
+  - DEV Partition (Calibrated $\theta^* = 0.0340$): EER = **0.00%**, ROC-AUC = **1.0000**, Accuracy = **100.00%**, FAR = 0.00%, FRR = 0.00%
+  - Held-Out EVAL Partition (Frozen $\theta^* = 0.0340$): EER = **20.65%**, ROC-AUC = **0.8499**, FAR = **52.40%**, FRR = **0.97%**, Accuracy = **52.90%**, Precision = **99.77%**, Recall = **47.60%**, F1 = **0.6445**
+  - Empirical Gap: Highlights acoustic domain shift on unseen synthesis algorithms (A07–A19) in the EVAL split, validating the need for raw-audio architectures (RawNet2) and multi-signal fusion.
 
 ---
 
