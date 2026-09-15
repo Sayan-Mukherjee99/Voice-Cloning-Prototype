@@ -317,14 +317,20 @@ Analyze Cross-Dataset Generalization & Avoid Data Leakage
    - *Protocol*: Evaluated without adding datasets merely for the sake of adding datasets.
    - *Status*: **Future scope**.
 
-### 6.2 Evaluation Metrics Suite
-Model evaluation in Phase B5 will be measured using standard anti-spoofing and classification metrics:
+### 6.2 Evaluation Metrics Suite & Baseline Results
+Model evaluation and candidate benchmarking use standard anti-spoofing and classification metrics (implemented in `backend/ai/training/metrics.py`):
 * **Equal Error Rate (EER)**: The operational point where False Acceptance Rate equals False Rejection Rate.
 * **Receiver Operating Characteristic — Area Under Curve (ROC-AUC)**.
 * **False Acceptance Rate (FAR)**: Proportion of synthetic speech incorrectly classified as genuine.
 * **False Rejection Rate (FRR)**: Proportion of genuine human speech incorrectly classified as synthetic.
 * **Confusion Matrix**: Bona fide vs. spoofed counts.
-* **Precision, Recall, F1-Score**: Across confidence thresholds.
+* **Precision, Recall, F1-Score**: Evaluated at calibrated threshold $\theta^*$.
+
+**Empirical ResNet Acoustic Baseline Results (Phase B4)**:
+* Architecture: `ResNetAcousticBaseline` (11.24M parameters, 42.86 MB) with 80-bin log-mel front-end.
+* DEV Partition (Calibrated $\theta^* = 0.5000$): EER = **0.00%**, ROC-AUC = **1.0000**, Accuracy = **100.00%** (2,000 samples).
+* Held-Out EVAL Partition (Frozen $\theta^* = 0.5000$): EER = **31.26%**, ROC-AUC = **0.6605**, Accuracy = **31.00%** (2,000 samples).
+* Analysis: Generalization gap on unseen spoofing algorithms (A07–A19) empirically confirms the need for raw-audio architectures (RawNet2) and multi-signal fusion.
 
 ---
 
