@@ -61,9 +61,14 @@ Speaker verification is refactored strictly into an **optional supporting identi
 │                      │ Synthetic Audio Inject  │ useAudioStreamer generating synthetic sines     │
 │                      │ PITCH Challenge Logic   │ Static UI drawer; lacks backend acoustic check  │
 ├──────────────────────┼─────────────────────────┼─────────────────────────────────────────────────┤
-│ RESEARCH / PLANNED   │ Offline Deepfake MVP    │ Offline WAV/MP3 ingestion & baseline detector   │
-│                      │ Candidate Baselines     │ ResNet, RawNet2, AASIST model experiments       │
-│                      │ Model Metrics Suite     │ EER, ROC-AUC, FAR, FRR, confusion matrix        │
+│ IMPLEMENTED (B4)     │ ResNet Baseline Detector│ ResNetAcousticBaseline (11.2M params);          │
+│                      │                         │ Checkpoint: resnet18_baseline_best.pt.          │
+│                      │                         │ DEV EER: 0.00%, EVAL EER: 31.26%.               │
+│                      │ Model Metrics Suite     │ Vectorized EER, ROC-AUC, FAR, FRR, confusion    │
+│                      │                         │ matrix (backend/ai/training/metrics.py).        │
+├──────────────────────┼─────────────────────────┼─────────────────────────────────────────────────┤
+│ RESEARCH / PLANNED   │ Raw Audio Baseline      │ RawNet2 / SincNet candidate experiments (B5)    │
+│                      │ Graph Attention Baseline│ AASIST / AASIST-L candidate experiments         │
 │                      │ Cross-Dataset Eval      │ ASVspoof 2021 DF generalization testing         │
 │                      │ Multi-Signal Fusion     │ Weighted fusion of waveform, spectral, prosody  │
 ├──────────────────────┼─────────────────────────┼─────────────────────────────────────────────────┤
